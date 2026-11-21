@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Mau.Core/Mau.Core.csproj" />
+    <Project Path="src/Mau.Data/Mau.Data.csproj" />
+    <Project Path="src/Mau.Web/Mau.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Mau.Tests/Mau.Tests.csproj" />
+  </Folder>
+</Solution>
