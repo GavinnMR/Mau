@@ -1,0 +1,345 @@
+{
+  "ingredients": [
+    { "name": "chicken", "category": "Protein", "isStaple": false, "synonyms": [ { "name": "manok", "language": "Filipino" } ] },
+    { "name": "pork", "category": "Protein", "isStaple": false, "synonyms": [ { "name": "baboy", "language": "Filipino" } ] },
+    { "name": "beef", "category": "Protein", "isStaple": false, "synonyms": [ { "name": "baka", "language": "Filipino" } ] },
+    { "name": "fish", "category": "Protein", "isStaple": false, "synonyms": [ { "name": "isda", "language": "Filipino" } ] },
+    { "name": "shrimp", "category": "Protein", "isStaple": false, "synonyms": [ { "name": "hipon", "language": "Filipino" } ] },
+    { "name": "egg", "category": "Protein", "isStaple": false, "synonyms": [ { "name": "itlog", "language": "Filipino" } ] },
+    { "name": "mung beans", "category": "Legume", "isStaple": false, "synonyms": [ { "name": "monggo", "language": "Filipino" } ] },
+    { "name": "eggplant", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "talong", "language": "Filipino" } ] },
+    { "name": "string beans", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "sitaw", "language": "Filipino" } ] },
+    { "name": "water spinach", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "kangkong", "language": "Filipino" } ] },
+    { "name": "bok choy", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "pechay", "language": "Filipino" } ] },
+    { "name": "cabbage", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "repolyo", "language": "Filipino" } ] },
+    { "name": "potato", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "patatas", "language": "Filipino" } ] },
+    { "name": "carrot", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "karot", "language": "Filipino" } ] },
+    { "name": "radish", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "labanos", "language": "Filipino" } ] },
+    { "name": "tomato", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "kamatis", "language": "Filipino" } ] },
+    { "name": "squash", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "kalabasa", "language": "Filipino" } ] },
+    { "name": "green papaya", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "hilaw na papaya", "language": "Filipino" } ] },
+    { "name": "bell pepper", "category": "Vegetable", "isStaple": false, "synonyms": [] },
+    { "name": "chili leaves", "category": "Vegetable", "isStaple": false, "synonyms": [ { "name": "dahon ng sili", "language": "Filipino" } ] },
+    { "name": "garlic", "category": "Aromatic", "isStaple": false, "synonyms": [ { "name": "bawang", "language": "Filipino" } ] },
+    { "name": "onion", "category": "Aromatic", "isStaple": false, "synonyms": [ { "name": "sibuyas", "language": "Filipino" } ] },
+    { "name": "ginger", "category": "Aromatic", "isStaple": false, "synonyms": [ { "name": "luya", "language": "Filipino" } ] },
+    { "name": "bay leaf", "category": "Aromatic", "isStaple": false, "synonyms": [ { "name": "laurel", "language": "Filipino" }, { "name": "dahon ng laurel", "language": "Filipino" } ] },
+    { "name": "soy sauce", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "toyo", "language": "Filipino" } ] },
+    { "name": "vinegar", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "suka", "language": "Filipino" } ] },
+    { "name": "fish sauce", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "patis", "language": "Filipino" } ] },
+    { "name": "calamansi", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "kalamansi", "language": "Filipino" } ] },
+    { "name": "tamarind", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "sampalok", "language": "Filipino" } ] },
+    { "name": "sugar", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "asukal", "language": "Filipino" } ] },
+    { "name": "annatto", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "atsuete", "language": "Filipino" } ] },
+    { "name": "shrimp paste", "category": "Seasoning", "isStaple": false, "synonyms": [ { "name": "bagoong", "language": "Filipino" } ] },
+    { "name": "tomato sauce", "category": "Seasoning", "isStaple": false, "synonyms": [] },
+    { "name": "peanut butter", "category": "Other", "isStaple": false, "synonyms": [] },
+    { "name": "salt", "category": "Seasoning", "isStaple": true, "synonyms": [ { "name": "asin", "language": "Filipino" } ] },
+    { "name": "black pepper", "category": "Seasoning", "isStaple": true, "synonyms": [ { "name": "paminta", "language": "Filipino" } ] },
+    { "name": "coconut milk", "category": "Liquid", "isStaple": false, "synonyms": [ { "name": "gata", "language": "Filipino" } ] },
+    { "name": "water", "category": "Liquid", "isStaple": true, "synonyms": [ { "name": "tubig", "language": "Filipino" } ] },
+    { "name": "cooking oil", "category": "Liquid", "isStaple": true, "synonyms": [ { "name": "mantika", "language": "Filipino" }, { "name": "oil", "language": "English" } ] }
+  ],
+  "dishes": [
+    {
+      "name": "Chicken adobo",
+      "description": "Chicken simmered in soy sauce, vinegar and garlic until the sauce turns glossy and savory-sour.",
+      "cookingMethod": "Braised", "cookTimeMinutes": 45,
+      "steps": [
+        "Put the chicken, soy sauce, vinegar, garlic, pepper and bay leaf in a pot. Let it sit for 15 minutes if you have time.",
+        "Add the water and bring to a boil without stirring, so the vinegar mellows.",
+        "Lower the heat, cover, and simmer about 25 minutes until the chicken is tender.",
+        "Uncover and simmer until the sauce thickens. Stir in the sugar if you like it a little sweet. Serve with rice."
+      ],
+      "ingredients": [
+        { "name": "chicken", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "soy sauce", "quantity": 0.5, "unit": "cup", "isOptional": false },
+        { "name": "vinegar", "quantity": 0.5, "unit": "cup", "isOptional": false },
+        { "name": "garlic", "quantity": 6, "unit": "cloves", "isOptional": false },
+        { "name": "black pepper", "quantity": 1, "unit": "tsp", "isOptional": false },
+        { "name": "bay leaf", "quantity": 2, "unit": "pcs", "isOptional": true },
+        { "name": "water", "quantity": 0.5, "unit": "cup", "isOptional": false },
+        { "name": "sugar", "quantity": 1, "unit": "tbsp", "isOptional": true }
+      ]
+    },
+    {
+      "name": "Pork adobo",
+      "description": "Pork cooked low and slow in soy sauce, vinegar and garlic until tender, with a rich reduced sauce.",
+      "cookingMethod": "Braised", "cookTimeMinutes": 60,
+      "steps": [
+        "Combine the pork, soy sauce, vinegar, garlic, pepper and bay leaf in a pot.",
+        "Add the water and bring to a boil without stirring.",
+        "Cover and simmer about 45 minutes until the pork is tender.",
+        "Uncover and reduce the sauce until it coats the meat. Add sugar to taste. Serve with rice."
+      ],
+      "ingredients": [
+        { "name": "pork", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "soy sauce", "quantity": 0.5, "unit": "cup", "isOptional": false },
+        { "name": "vinegar", "quantity": 0.5, "unit": "cup", "isOptional": false },
+        { "name": "garlic", "quantity": 6, "unit": "cloves", "isOptional": false },
+        { "name": "black pepper", "quantity": 1, "unit": "tsp", "isOptional": false },
+        { "name": "bay leaf", "quantity": 2, "unit": "pcs", "isOptional": true },
+        { "name": "water", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "sugar", "quantity": 1, "unit": "tbsp", "isOptional": true }
+      ]
+    },
+    {
+      "name": "Chicken tinola",
+      "description": "A light ginger-scented chicken soup with green papaya and chili leaves.",
+      "cookingMethod": "Soup", "cookTimeMinutes": 40,
+      "steps": [
+        "Heat the oil and cook the garlic, onion and ginger until fragrant.",
+        "Add the chicken and fish sauce and cook for about 5 minutes.",
+        "Pour in the water and simmer about 20 minutes.",
+        "Add the papaya and cook about 8 minutes until tender.",
+        "Stir in the chili leaves, season with salt, and serve hot."
+      ],
+      "ingredients": [
+        { "name": "chicken", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "ginger", "quantity": 2, "unit": "inch", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "garlic", "quantity": 3, "unit": "cloves", "isOptional": false },
+        { "name": "green papaya", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "chili leaves", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "fish sauce", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 6, "unit": "cups", "isOptional": false },
+        { "name": "cooking oil", "quantity": 1, "unit": "tbsp", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false }
+      ]
+    },
+    {
+      "name": "Pork sinigang",
+      "description": "A sour tamarind soup with tender pork and plenty of vegetables.",
+      "cookingMethod": "Soup", "cookTimeMinutes": 75,
+      "steps": [
+        "Boil the pork in the water and skim off the foam. Simmer about 45 minutes until tender.",
+        "Add the onion, tomato and tamarind and simmer 10 minutes.",
+        "Add the radish and string beans, then the eggplant a few minutes later.",
+        "Season with fish sauce and salt. Turn off the heat, stir in the water spinach, and serve."
+      ],
+      "ingredients": [
+        { "name": "pork", "quantity": 750, "unit": "g", "isOptional": false },
+        { "name": "tamarind", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "tomato", "quantity": 2, "unit": "pcs", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "radish", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "water spinach", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "string beans", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "eggplant", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "fish sauce", "quantity": 3, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 8, "unit": "cups", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false }
+      ]
+    },
+    {
+      "name": "Beef bistek",
+      "description": "Thin beef slices in a soy sauce and calamansi marinade, simmered and topped with onion rings.",
+      "cookingMethod": "Sauteed", "cookTimeMinutes": 40,
+      "steps": [
+        "Mix the beef with the soy sauce, calamansi juice and pepper. Let it sit while you slice the onions into rings.",
+        "Heat the oil and sear the beef in batches.",
+        "Pour in the leftover marinade and simmer until the beef is tender.",
+        "Add the onion rings and cook 2 minutes. Add a little sugar if the sauce is too sharp."
+      ],
+      "ingredients": [
+        { "name": "beef", "quantity": 500, "unit": "g", "isOptional": false },
+        { "name": "soy sauce", "quantity": 0.25, "unit": "cup", "isOptional": false },
+        { "name": "calamansi", "quantity": 6, "unit": "pcs", "isOptional": false },
+        { "name": "onion", "quantity": 2, "unit": "pcs", "isOptional": false },
+        { "name": "black pepper", "quantity": 1, "unit": "tsp", "isOptional": false },
+        { "name": "cooking oil", "quantity": 3, "unit": "tbsp", "isOptional": false },
+        { "name": "sugar", "quantity": 1, "unit": "tsp", "isOptional": true }
+      ]
+    },
+    {
+      "name": "Chicken afritada",
+      "description": "Chicken and vegetables stewed in a tomato sauce.",
+      "cookingMethod": "Stewed", "cookTimeMinutes": 50,
+      "steps": [
+        "Heat the oil and cook the garlic and onion. Add the chicken and brown lightly.",
+        "Add the fish sauce, tomato sauce, water and bay leaf. Simmer 20 minutes.",
+        "Add the potato and carrot and cook until tender.",
+        "Add the bell pepper and cook 3 more minutes. Serve with rice."
+      ],
+      "ingredients": [
+        { "name": "chicken", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "tomato sauce", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "potato", "quantity": 2, "unit": "pcs", "isOptional": false },
+        { "name": "carrot", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "bell pepper", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "garlic", "quantity": 4, "unit": "cloves", "isOptional": false },
+        { "name": "fish sauce", "quantity": 1, "unit": "tbsp", "isOptional": false },
+        { "name": "bay leaf", "quantity": 1, "unit": "pcs", "isOptional": true },
+        { "name": "water", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "cooking oil", "quantity": 2, "unit": "tbsp", "isOptional": false }
+      ]
+    },
+    {
+      "name": "Beef nilaga",
+      "description": "A clear beef soup with potatoes and leafy vegetables.",
+      "cookingMethod": "Soup", "cookTimeMinutes": 120,
+      "steps": [
+        "Boil the beef in the water with the onion and pepper. Skim the foam.",
+        "Simmer about 90 minutes until the beef is tender.",
+        "Add the potatoes and cook until soft, then season with fish sauce and salt.",
+        "Add the cabbage and bok choy and cook 3 minutes. Serve hot."
+      ],
+      "ingredients": [
+        { "name": "beef", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "potato", "quantity": 3, "unit": "pcs", "isOptional": false },
+        { "name": "cabbage", "quantity": 0.5, "unit": "head", "isOptional": false },
+        { "name": "bok choy", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "black pepper", "quantity": 1, "unit": "tsp", "isOptional": false },
+        { "name": "fish sauce", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 8, "unit": "cups", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false }
+      ]
+    },
+    {
+      "name": "Pork menudo",
+      "description": "Diced pork and vegetables stewed in tomato sauce with a splash of soy sauce.",
+      "cookingMethod": "Stewed", "cookTimeMinutes": 60,
+      "steps": [
+        "Heat the oil and cook the garlic and onion. Add the pork and brown it.",
+        "Add the soy sauce, tomato sauce and water. Simmer about 30 minutes until the pork is tender.",
+        "Add the potato and carrot and cook until soft.",
+        "Add the bell pepper and calamansi juice if using, cook 3 minutes, and serve."
+      ],
+      "ingredients": [
+        { "name": "pork", "quantity": 500, "unit": "g", "isOptional": false },
+        { "name": "tomato sauce", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "potato", "quantity": 2, "unit": "pcs", "isOptional": false },
+        { "name": "carrot", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "bell pepper", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "garlic", "quantity": 3, "unit": "cloves", "isOptional": false },
+        { "name": "soy sauce", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "calamansi", "quantity": 3, "unit": "pcs", "isOptional": true },
+        { "name": "cooking oil", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 1, "unit": "cup", "isOptional": false }
+      ]
+    },
+    {
+      "name": "Tortang talong",
+      "description": "Roasted eggplant dipped in beaten egg and pan-fried into a savory omelet.",
+      "cookingMethod": "Fried", "cookTimeMinutes": 20,
+      "steps": [
+        "Roast the eggplants over a flame or in an oven until the skin chars and the flesh is soft.",
+        "Peel off the skin, keep the stem, and gently flatten each eggplant with a fork.",
+        "Beat the eggs with salt. Dip each eggplant in the egg.",
+        "Fry in hot oil until golden on both sides."
+      ],
+      "ingredients": [
+        { "name": "eggplant", "quantity": 3, "unit": "pcs", "isOptional": false },
+        { "name": "egg", "quantity": 3, "unit": "pcs", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false },
+        { "name": "cooking oil", "quantity": 0.5, "unit": "cup", "isOptional": false }
+      ]
+    },
+    {
+      "name": "Pritong isda",
+      "description": "Simple fried fish, crisp outside and tender inside, served with a vinegar and garlic dip.",
+      "cookingMethod": "Fried", "cookTimeMinutes": 25,
+      "steps": [
+        "Pat the fish dry and rub it with salt.",
+        "Heat the oil until shimmering and fry the fish about 5 minutes per side until golden.",
+        "Drain on paper. For a dip, mix the vinegar with chopped garlic."
+      ],
+      "ingredients": [
+        { "name": "fish", "quantity": 500, "unit": "g", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false },
+        { "name": "cooking oil", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "garlic", "quantity": 3, "unit": "cloves", "isOptional": true },
+        { "name": "vinegar", "quantity": 0.25, "unit": "cup", "isOptional": true }
+      ]
+    },
+    {
+      "name": "Kare-kare",
+      "description": "Beef and vegetables in a thick peanut sauce colored with annatto, traditionally eaten with shrimp paste.",
+      "cookingMethod": "Stewed", "cookTimeMinutes": 150,
+      "steps": [
+        "Boil the beef in the water until very tender, about 2 hours. Keep the broth.",
+        "In another pot, cook the garlic and onion in oil. Stir in the annatto.",
+        "Add the peanut butter and 4 cups of the broth and stir until smooth. Add the beef.",
+        "Add the eggplant and string beans and cook until tender. Add the bok choy last and season with salt.",
+        "Serve with shrimp paste on the side."
+      ],
+      "ingredients": [
+        { "name": "beef", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "peanut butter", "quantity": 0.5, "unit": "cup", "isOptional": false },
+        { "name": "eggplant", "quantity": 2, "unit": "pcs", "isOptional": false },
+        { "name": "string beans", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "bok choy", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "garlic", "quantity": 4, "unit": "cloves", "isOptional": false },
+        { "name": "annatto", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "shrimp paste", "quantity": 3, "unit": "tbsp", "isOptional": true },
+        { "name": "cooking oil", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 8, "unit": "cups", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false }
+      ]
+    },
+    {
+      "name": "Ginataang kalabasa at sitaw",
+      "description": "Squash, string beans and shrimp simmered in coconut milk.",
+      "cookingMethod": "Stewed", "cookTimeMinutes": 30,
+      "steps": [
+        "Bring the water, coconut milk, garlic and onion to a gentle boil.",
+        "Add the squash and cook about 10 minutes until it starts to soften.",
+        "Add the string beans and shrimp and cook 5 minutes.",
+        "Season with fish sauce and serve with rice."
+      ],
+      "ingredients": [
+        { "name": "squash", "quantity": 500, "unit": "g", "isOptional": false },
+        { "name": "string beans", "quantity": 1, "unit": "bunch", "isOptional": false },
+        { "name": "coconut milk", "quantity": 2, "unit": "cups", "isOptional": false },
+        { "name": "shrimp", "quantity": 250, "unit": "g", "isOptional": false },
+        { "name": "garlic", "quantity": 3, "unit": "cloves", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "fish sauce", "quantity": 1, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 0.5, "unit": "cup", "isOptional": false }
+      ]
+    },
+    {
+      "name": "Ginisang monggo",
+      "description": "A thick mung bean stew sautéed with garlic, onion and tomato, often with a little pork.",
+      "cookingMethod": "Stewed", "cookTimeMinutes": 60,
+      "steps": [
+        "Boil the mung beans in the water for about 40 minutes until soft and mashable.",
+        "In another pot, heat the oil and cook the garlic, onion and tomato. Add the pork if using and brown it.",
+        "Pour the cooked beans into the pot and simmer 10 minutes.",
+        "Season with fish sauce. Stir in the chili leaves if using and serve."
+      ],
+      "ingredients": [
+        { "name": "mung beans", "quantity": 1, "unit": "cup", "isOptional": false },
+        { "name": "pork", "quantity": 200, "unit": "g", "isOptional": true },
+        { "name": "garlic", "quantity": 3, "unit": "cloves", "isOptional": false },
+        { "name": "onion", "quantity": 1, "unit": "pcs", "isOptional": false },
+        { "name": "tomato", "quantity": 2, "unit": "pcs", "isOptional": false },
+        { "name": "fish sauce", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "water", "quantity": 4, "unit": "cups", "isOptional": false },
+        { "name": "cooking oil", "quantity": 2, "unit": "tbsp", "isOptional": false },
+        { "name": "chili leaves", "quantity": 1, "unit": "bunch", "isOptional": true }
+      ]
+    },
+    {
+      "name": "Garlic fried chicken",
+      "description": "Chicken pieces fried until crisp, topped with plenty of crunchy garlic.",
+      "cookingMethod": "Fried", "cookTimeMinutes": 40,
+      "steps": [
+        "Season the chicken with salt and pepper.",
+        "Fry in hot oil, turning occasionally, about 20 minutes until golden and cooked through. Drain.",
+        "Fry the sliced garlic in the same oil until light gold and scatter it on top."
+      ],
+      "ingredients": [
+        { "name": "chicken", "quantity": 1, "unit": "kg", "isOptional": false },
+        { "name": "garlic", "quantity": 8, "unit": "cloves", "isOptional": false },
+        { "name": "salt", "quantity": null, "unit": null, "isOptional": false },
+        { "name": "black pepper", "quantity": 1, "unit": "tsp", "isOptional": false },
+        { "name": "cooking oil", "quantity": 1, "unit": "cup", "isOptional": false }
+      ]
+    }
+  ]
+}
