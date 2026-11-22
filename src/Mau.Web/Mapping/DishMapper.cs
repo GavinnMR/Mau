@@ -1,12 +1,30 @@
+using System.Globalization;
 using Mau.Core.Catalog;
 using Mau.Core.Search;
 using Mau.Web.Api;
+using Mau.Web.ViewModels;
 
 namespace Mau.Web.Mapping;
 
-/// <summary>Maps Core results to API DTOs.</summary>
+/// <summary>Maps Core results to API DTOs and page view models.</summary>
 public static class DishMapper
 {
+    public static DishDetailsViewModel ToViewModel(CatalogDish dish) =>
+        new(
+            dish.Id,
+            dish.Name,
+            dish.Description,
+            dish.CookingMethod.ToString(),
+            dish.CookTimeMinutes,
+            dish.Ingredients
+                .Select(row => new DishIngredientViewModel(
+                    row.Name,
+                    AmountText(row.Quantity, row.Unit),
+                    row.IsOptional,
+                    row.IsStaple))
+                .ToList(),
+            dish.Steps);
+
     public static DishDetailsDto ToDto(CatalogDish dish) =>
         new(
             dish.Id,
@@ -50,4 +68,15 @@ public static class DishMapper
         hints
             .Select(hint => new HintDto(hint.Text, hint.IngredientName))
             .ToList();
+
+    private static string AmountText(decimal? quantity, string? unit)
+    {
+        if (quantity is null)
+        {
+            return "to taste";
+        }
+
+        var amount = quantity.Value.ToString("0.##", CultureInfo.InvariantCulture);
+        return string.IsNullOrEmpty(unit) ? amount : $"{amount} {unit}";
+    }
 }

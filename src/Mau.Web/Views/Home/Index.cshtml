@@ -1,8 +1,28 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "What can you cook?";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<h1>What can you cook?</h1>
+
+<div class="mb-3">
+    <label for="ingredient-input" class="form-label">Ingredients</label>
+    <input id="ingredient-input"
+           type="text"
+           class="form-control"
+           autocomplete="off"
+           role="combobox"
+           aria-autocomplete="list"
+           aria-expanded="false"
+           aria-controls="hint-list"
+           placeholder="Type an ingredient, then press comma or Enter" />
+    <ul id="hint-list" role="listbox" hidden></ul>
+    <div class="form-text">
+        Use English or Filipino names, like chicken or toyo. Click − on a chip to leave an ingredient out.
+    </div>
 </div>
+
+<div id="chip-list" aria-label="Your ingredients" class="mb-3"></div>
+<div id="status-message" role="status" aria-live="polite" class="mb-3"></div>
+<div id="result-list"></div>
+
+<script src="~/js/search.js" asp-append-version="true"></script>

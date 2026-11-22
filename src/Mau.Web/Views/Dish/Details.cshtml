@@ -1,0 +1,52 @@
+@model DishDetailsViewModel
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<h1>@Model.Name</h1>
+
+<p>
+    <span class="badge text-bg-secondary">@Model.CookingMethod</span>
+    <span class="ms-2">@Model.CookTimeMinutes min</span>
+</p>
+
+<p>@Model.Description</p>
+
+<h2>Ingredients</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Ingredient</th>
+            <th scope="col">Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var ingredient in Model.Ingredients)
+        {
+            <tr>
+                <td>
+                    @ingredient.Name
+                    @if (ingredient.IsOptional)
+                    {
+                        <span class="badge text-bg-secondary ms-1">optional</span>
+                    }
+                    @if (ingredient.IsStaple)
+                    {
+                        <span class="text-muted ms-1">pantry staple</span>
+                    }
+                </td>
+                <td>@ingredient.AmountText</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<h2>Steps</h2>
+<ol>
+    @foreach (var step in Model.Steps)
+    {
+        <li>@step</li>
+    }
+</ol>
+
+<a href="/">← Back to search</a>
