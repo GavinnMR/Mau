@@ -81,7 +81,7 @@ public static class ProfileMapper
 
             items.Add(new HistoryItemViewModel(
                 entry.Id,
-                entry.SearchedAtUtc
+                DateTime.SpecifyKind(entry.SearchedAtUtc, DateTimeKind.Utc)
                     .ToLocalTime()
                     .ToString("d MMM yyyy, h:mm tt", CultureInfo.InvariantCulture),
                 entry.ResultCount,
