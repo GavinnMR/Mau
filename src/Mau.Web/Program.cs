@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Mau.Core.Admin;
 using Mau.Core.Catalog;
 using Mau.Core.Search;
 using Mau.Core.Users;
@@ -69,6 +70,9 @@ builder.Services.AddDbContextFactory<MauDbContext>((serviceProvider, options) =>
 builder.Services.AddSingleton<ICatalogLoader, EfCatalogLoader>();
 builder.Services.AddSingleton<CatalogStore>();
 builder.Services.AddSingleton<ISearchService, SearchService>();
+
+builder.Services.AddSingleton<ICatalogAdminStore, EfCatalogAdminStore>();
+builder.Services.AddSingleton<ICatalogAdminService, CatalogAdminService>();
 
 builder.Services.AddSingleton<IPantryStore, EfPantryStore>();
 builder.Services.AddSingleton<IFavoriteStore, EfFavoriteStore>();
