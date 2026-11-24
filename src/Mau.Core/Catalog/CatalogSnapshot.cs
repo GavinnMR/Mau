@@ -59,7 +59,13 @@ public sealed class CatalogSnapshot
                 ingredient.CanonicalName,
                 ingredient.Category,
                 ingredient.IsStaple,
-                ingredient.Synonyms.Select(synonym => synonym.Name).ToList()))
+                ingredient.Synonyms.Select(synonym => synonym.Name).ToList())
+            {
+                SynonymItems = ingredient.Synonyms
+                    .Select(synonym => new CatalogSynonym(synonym.Name, synonym.Language))
+                    .OrderBy(synonym => synonym.Name, StringComparer.OrdinalIgnoreCase)
+                    .ToList(),
+            })
             .ToList();
 
         var dishIdsByIngredientId = new Dictionary<int, HashSet<int>>();

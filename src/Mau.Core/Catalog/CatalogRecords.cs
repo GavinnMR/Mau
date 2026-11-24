@@ -5,7 +5,10 @@ namespace Mau.Core.Catalog;
 /// <summary>An ingredient as exposed by the read model.</summary>
 public sealed record CatalogIngredient(
     int Id, string CanonicalName, IngredientCategory Category, bool IsStaple,
-    IReadOnlyList<string> Synonyms);
+    IReadOnlyList<string> Synonyms)
+{
+    public IReadOnlyList<CatalogSynonym> SynonymItems { get; init; } = [];
+}
 
 /// <summary>One ingredient row of a dish in the read model.</summary>
 public sealed record CatalogDishIngredient(
