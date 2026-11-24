@@ -1,0 +1,35 @@
+@model FavoritesViewModel
+@{
+    ViewData["Title"] = "Your favorites";
+}
+
+<h1>Your favorites</h1>
+
+@if (Model.Items.Count == 0)
+{
+    <p>No favorites yet. Open a dish and choose “Add to favorites”.</p>
+}
+else
+{
+    <div class="row">
+        @foreach (var item in Model.Items)
+        {
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h2 class="h5 card-title">
+                            <a href="/Dish/Details/@item.DishId">@item.Name</a>
+                        </h2>
+                        <p class="mb-2">
+                            <span class="badge text-bg-secondary me-2">@item.CookingMethod</span>
+                            <span class="text-muted">@item.CookTimeMinutes min</span>
+                        </p>
+                        <form method="post" asp-controller="Profile" asp-action="RemoveFavorite" asp-route-id="@item.DishId">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

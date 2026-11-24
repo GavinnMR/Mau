@@ -3,7 +3,21 @@
     ViewData["Title"] = Model.Name;
 }
 
-<h1>@Model.Name</h1>
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <h1 class="mb-0">@Model.Name</h1>
+    @if (Model.IsAuthenticated)
+    {
+        <button type="button" id="favorite-button" class="btn btn-outline-primary"
+                data-dish-id="@Model.Id" data-favorite="@(Model.IsFavorite ? "true" : "false")" aria-pressed="@(Model.IsFavorite ? "true" : "false")">
+            @(Model.IsFavorite ? "★ In your favorites" : "☆ Add to favorites")
+        </button>
+        <span id="favorite-status" class="visually-hidden" role="status" aria-live="polite"></span>
+    }
+    else
+    {
+        <a class="btn btn-outline-primary" href="@Url.Action("Login", "Account", new { returnUrl = Context.Request.Path })">Log in to save favorites</a>
+    }
+</div>
 
 <p>
     <span class="badge text-bg-secondary">@Model.CookingMethod</span>
@@ -50,3 +64,10 @@
 </ol>
 
 <a href="/">← Back to search</a>
+
+@section Scripts {
+    @if (Model.IsAuthenticated)
+    {
+        <script src="~/js/favorite.js" asp-append-version="true"></script>
+    }
+}

@@ -1,5 +1,6 @@
 using Mau.Core.Catalog;
 using Mau.Core.Entities;
+using Mau.Core.Search;
 using Mau.Web.ViewModels;
 
 namespace Mau.Web.Mapping;
@@ -33,6 +34,26 @@ public static class ProfileMapper
         }
 
         return new PantryViewModel(groups, selectedIds.Count);
+    }
+
+    public static FavoritesViewModel ToFavoritesViewModel(
+        IReadOnlyList<int> dishIds, ISearchService searchService)
+    {
+        var items = new List<FavoriteItemViewModel>();
+
+        foreach (var dishId in dishIds)
+        {
+            var dish = searchService.GetDish(dishId);
+            if (dish is null)
+            {
+                continue;
+            }
+
+            items.Add(new FavoriteItemViewModel(
+                dish.Id, dish.Name, dish.CookingMethod.ToString(), dish.CookTimeMinutes));
+        }
+
+        return new FavoritesViewModel(items);
     }
 
     private static string GetTitle(IngredientCategory category) => category switch

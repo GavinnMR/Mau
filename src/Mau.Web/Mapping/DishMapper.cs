@@ -9,7 +9,8 @@ namespace Mau.Web.Mapping;
 /// <summary>Maps Core results to API DTOs and page view models.</summary>
 public static class DishMapper
 {
-    public static DishDetailsViewModel ToViewModel(CatalogDish dish) =>
+    public static DishDetailsViewModel ToViewModel(
+        CatalogDish dish, bool isAuthenticated = false, bool isFavorite = false) =>
         new(
             dish.Id,
             dish.Name,
@@ -23,7 +24,9 @@ public static class DishMapper
                     row.IsOptional,
                     row.IsStaple))
                 .ToList(),
-            dish.Steps);
+            dish.Steps,
+            isAuthenticated,
+            isFavorite);
 
     public static DishDetailsDto ToDto(CatalogDish dish) =>
         new(
