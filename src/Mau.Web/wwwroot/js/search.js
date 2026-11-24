@@ -6,6 +6,7 @@
   var chipList = document.getElementById("chip-list");
   var statusMessage = document.getElementById("status-message");
   var resultList = document.getElementById("result-list");
+  var pantryCheckbox = document.getElementById("use-pantry");
   var csrfMeta = document.querySelector('meta[name="csrf-token"]');
 
   if (!input || !hintList || !chipList || !statusMessage || !resultList) {
@@ -58,13 +59,26 @@
     }, 150);
   }
 
-  function setStatus(mainText, unknownTokens, showRemoveButton) {
+  function usesPantry() {
+    return pantryCheckbox !== null &&
+      pantryCheckbox.checked &&
+      !pantryCheckbox.disabled;
+  }
+
+  function setStatus(mainText, unknownTokens, showRemoveButton, pantryApplied) {
     statusMessage.textContent = "";
 
     var main = document.createElement("p");
     main.className = "mb-1";
     main.textContent = mainText;
     statusMessage.appendChild(main);
+
+    if (pantryApplied) {
+      var pantryLine = document.createElement("p");
+      pantryLine.className = "mb-1";
+      pantryLine.textContent = "Your pantry is counted as ingredients you already have.";
+      statusMessage.appendChild(pantryLine);
+    }
 
     if (showRemoveButton) {
       var removeButton = document.createElement("button");
@@ -212,15 +226,22 @@
     renderChips(tokens);
     renderDishes(dishes);
 
+    var pantryApplied = data.pantryApplied === true;
+
     if (!hasUsableIngredient) {
-      setStatus("Add at least one known ingredient to see dishes.", unknownTokens, false);
+      setStatus(
+        "Add at least one known ingredient to see dishes.",
+        unknownTokens, false, pantryApplied);
     } else if (dishes.length === 0) {
-      setStatus("No dish contains all of these ingredients.", unknownTokens, true);
+      setStatus(
+        "No dish contains all of these ingredients.",
+        unknownTokens, true, pantryApplied);
     } else {
       setStatus(
         dishes.length + (dishes.length === 1 ? " dish found." : " dishes found."),
         unknownTokens,
-        false);
+        false,
+        pantryApplied);
     }
   }
 
@@ -242,7 +263,8 @@
       },
       body: JSON.stringify({
         text: buildText(),
-        excludedIds: Array.from(excludedIds)
+        excludedIds: Array.from(excludedIds),
+        usePantry: usesPantry()
       })
     })
       .then(function (response) {
@@ -377,6 +399,10 @@
         }
         hideHints();
       });
+  }
+
+  if (pantryCheckbox) {
+    pantryCheckbox.addEventListener("change", scheduleSearch);
   }
 
   input.addEventListener("input", function () {

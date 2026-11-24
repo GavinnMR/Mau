@@ -43,7 +43,7 @@ public static class DishMapper
                 .ToList(),
             dish.Steps);
 
-    public static SearchResponseDto ToDto(SearchResult result) =>
+    public static SearchResponseDto ToDto(SearchResult result, bool pantryApplied) =>
         new(
             result.Tokens
                 .Select(token => new TokenDto(
@@ -62,7 +62,8 @@ public static class DishMapper
                     dish.CookTimeMinutes,
                     dish.StillNeeded,
                     dish.MissingCount))
-                .ToList());
+                .ToList(),
+            pantryApplied);
 
     public static IReadOnlyList<HintDto> ToDto(IEnumerable<IngredientHint> hints) =>
         hints

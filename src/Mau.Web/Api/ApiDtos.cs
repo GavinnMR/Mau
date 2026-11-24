@@ -16,10 +16,14 @@ public sealed record DishCardDto(
     IReadOnlyList<string> StillNeeded, int MissingCount);
 
 public sealed record SearchResponseDto(
-    IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes)
+    IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied)
 {
     public string Status => "ok";
 }
+
+public sealed record PantryIngredientDto(int Id, string Name);
+
+public sealed record PantryResponseDto(IReadOnlyList<PantryIngredientDto> Ingredients);
 
 public sealed record DishIngredientDto(
     int IngredientId, string Name, decimal? Quantity, string? Unit, bool IsOptional, bool IsStaple);
@@ -35,4 +39,6 @@ public sealed class SearchRequestDto
 
     [MaxLength(50, ErrorMessage = "At most 50 excluded ingredients are allowed.")]
     public List<int>? ExcludedIds { get; set; }
+
+    public bool UsePantry { get; set; }
 }

@@ -205,6 +205,27 @@ public class ApiTests : IClassFixture<MauWebFactory>
     }
 
     [Fact]
+    public async Task PostSearch_GuestWithUsePantry_IgnoresPantryAndMatchesNormalSearch()
+    {
+        using var client = CreateClient();
+        var token = await CsrfHelper.GetTokenAsync(client);
+
+        using var withPantry = await PostSearchAsync(
+            client, new { text = "chicken,", usePantry = true }, token);
+        using var withoutPantry = await PostSearchAsync(
+            client, new { text = "chicken,", usePantry = false }, token);
+
+        Assert.Equal(HttpStatusCode.OK, withPantry.StatusCode);
+        using var withJson = JsonDocument.Parse(await withPantry.Content.ReadAsStringAsync());
+        using var withoutJson = JsonDocument.Parse(await withoutPantry.Content.ReadAsStringAsync());
+
+        Assert.False(withJson.RootElement.GetProperty("pantryApplied").GetBoolean());
+        Assert.Equal(
+            withoutJson.RootElement.GetProperty("dishes").GetRawText(),
+            withJson.RootElement.GetProperty("dishes").GetRawText());
+    }
+
+    [Fact]
     public async Task PostSearch_TextLongerThanFiveHundredCharacters_ReturnsBadRequest()
     {
         using var client = CreateClient();
