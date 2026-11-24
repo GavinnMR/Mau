@@ -1,10 +1,12 @@
 using Mau.Core.Entities;
+using Mau.Data.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mau.Data;
 
-/// <summary>EF Core context for the Mau catalog.</summary>
-public class MauDbContext : DbContext
+/// <summary>EF Core context for the Mau catalog and Identity users.</summary>
+public class MauDbContext : IdentityDbContext<ApplicationUser>
 {
     public MauDbContext(DbContextOptions<MauDbContext> options) : base(options)
     {
@@ -17,6 +19,8 @@ public class MauDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.Entity<Ingredient>(entity =>
         {
             entity.Property(ingredient => ingredient.CanonicalName)
