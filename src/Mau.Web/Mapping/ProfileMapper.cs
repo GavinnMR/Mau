@@ -1,6 +1,8 @@
+using System.Globalization;
 using Mau.Core.Catalog;
 using Mau.Core.Entities;
 using Mau.Core.Search;
+using Mau.Core.Users;
 using Mau.Web.ViewModels;
 
 namespace Mau.Web.Mapping;
@@ -54,6 +56,40 @@ public static class ProfileMapper
         }
 
         return new FavoritesViewModel(items);
+    }
+
+    public static HistoryViewModel ToHistoryViewModel(
+        IReadOnlyList<SearchLogEntry> entries, CatalogSnapshot catalog)
+    {
+        var items = new List<HistoryItemViewModel>();
+
+        foreach (var entry in entries)
+        {
+            var names = entry.IngredientIds
+                .Select(id => catalog.IngredientsById.TryGetValue(id, out var ingredient)
+                    ? ingredient.CanonicalName
+                    : null)
+                .Where(name => name is not null)
+                .Select(name => name!)
+                .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (names.Count == 0)
+            {
+                continue;
+            }
+
+            items.Add(new HistoryItemViewModel(
+                entry.Id,
+                entry.SearchedAtUtc
+                    .ToLocalTime()
+                    .ToString("d MMM yyyy, h:mm tt", CultureInfo.InvariantCulture),
+                entry.ResultCount,
+                names,
+                string.Join(",", names)));
+        }
+
+        return new HistoryViewModel(items);
     }
 
     private static string GetTitle(IngredientCategory category) => category switch

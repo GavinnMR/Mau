@@ -1,0 +1,38 @@
+@model HistoryViewModel
+@{
+    ViewData["Title"] = "Your recent searches";
+}
+
+<h1>Your recent searches</h1>
+<p>A search appears here when you open a dish from the results.</p>
+
+@if (Model.Items.Count == 0)
+{
+    <p>No searches yet.</p>
+}
+else
+{
+    <form method="post" asp-controller="Profile" asp-action="ClearHistory" class="mb-3">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Clear all history</button>
+    </form>
+
+    <ul class="list-group">
+        @foreach (var item in Model.Items)
+        {
+            <li class="list-group-item">
+                <div class="mb-2">
+                    @foreach (var name in item.IngredientNames)
+                    {
+                        <span class="badge text-bg-success me-1">@name</span>
+                    }
+                </div>
+                <p class="mb-1">@item.ResultCount @(item.ResultCount == 1 ? "dish found" : "dishes found")</p>
+                <p class="mb-2 text-muted">@item.WhenText</p>
+                <a asp-controller="Home" asp-action="Index" asp-route-q="@item.SearchQuery">Search again</a>
+                <form method="post" asp-controller="Profile" asp-action="DeleteHistory" asp-route-id="@item.Id" class="d-inline ms-2">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
+            </li>
+        }
+    </ul>
+}

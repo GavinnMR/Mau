@@ -16,17 +16,20 @@ public sealed class ProfileController : Controller
     private readonly IPantryService _pantryService;
     private readonly ISearchService _searchService;
     private readonly IFavoriteService _favoriteService;
+    private readonly ISearchHistoryService _historyService;
 
     public ProfileController(
         CatalogStore catalog,
         IPantryService pantryService,
         ISearchService searchService,
-        IFavoriteService favoriteService)
+        IFavoriteService favoriteService,
+        ISearchHistoryService historyService)
     {
         _catalog = catalog;
         _pantryService = pantryService;
         _searchService = searchService;
         _favoriteService = favoriteService;
+        _historyService = historyService;
     }
 
     [HttpGet]
@@ -69,5 +72,36 @@ public sealed class ProfileController : Controller
         TempData["StatusMessage"] = "Removed from favorites.";
 
         return RedirectToAction(nameof(Favorites));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> History()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var entries = await _historyService.GetRecentAsync(userId);
+
+        return View(ProfileMapper.ToHistoryViewModel(entries, _catalog.Current));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteHistory(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _historyService.DeleteAsync(userId, id);
+
+        TempData["StatusMessage"] = "Search removed.";
+
+        return RedirectToAction(nameof(History));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ClearHistory()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        await _historyService.ClearAsync(userId);
+
+        TempData["StatusMessage"] = "History cleared.";
+
+        return RedirectToAction(nameof(History));
     }
 }

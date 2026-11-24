@@ -25,6 +25,11 @@ public sealed record PantryIngredientDto(int Id, string Name);
 
 public sealed record PantryResponseDto(IReadOnlyList<PantryIngredientDto> Ingredients);
 
+public sealed record SearchLogResponseDto(bool Logged)
+{
+    public string Status => "ok";
+}
+
 public sealed record DishIngredientDto(
     int IngredientId, string Name, decimal? Quantity, string? Unit, bool IsOptional, bool IsStaple);
 

@@ -182,6 +182,7 @@
       var title = document.createElement("h2");
       title.className = "h5 card-title mb-2";
       var link = document.createElement("a");
+      link.className = "dish-link";
       link.href = "/Dish/Details/" + dish.id;
       link.textContent = dish.name;
       title.appendChild(link);
@@ -243,6 +244,58 @@
         false,
         pantryApplied);
     }
+  }
+
+  function logHistory(event) {
+    var target = event.target;
+    if (!target || typeof target.closest !== "function") {
+      return;
+    }
+
+    var link = target.closest("a.dish-link");
+    if (!link || committed.length === 0) {
+      return;
+    }
+
+    fetch("/api/search-log", {
+      method: "POST",
+      keepalive: true,
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrfToken
+      },
+      body: JSON.stringify({
+        text: buildText(),
+        excludedIds: Array.from(excludedIds)
+      })
+    }).catch(function () {
+      // Ignore logging errors; navigation must not be affected.
+    });
+  }
+
+  function prefillFromQuery() {
+    var query = new URLSearchParams(location.search).get("q");
+    if (!query) {
+      return;
+    }
+
+    var seen = new Set();
+    query.split(",").forEach(function (piece) {
+      var trimmed = piece.trim();
+      if (!trimmed || trimmed.length > 100) {
+        return;
+      }
+
+      var key = normalizeKey(trimmed);
+      if (seen.has(key)) {
+        return;
+      }
+
+      seen.add(key);
+      if (committed.length < 20) {
+        committed.push(trimmed);
+      }
+    });
   }
 
   function runSearch() {
@@ -405,6 +458,9 @@
     pantryCheckbox.addEventListener("change", scheduleSearch);
   }
 
+  resultList.addEventListener("click", logHistory);
+  resultList.addEventListener("auxclick", logHistory);
+
   input.addEventListener("input", function () {
     var value = input.value;
 
@@ -466,5 +522,6 @@
     }
   });
 
+  prefillFromQuery();
   runSearch();
 }());
