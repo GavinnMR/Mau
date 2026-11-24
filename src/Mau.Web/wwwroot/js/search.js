@@ -1,0 +1,444 @@
+(function () {
+  "use strict";
+
+  var input = document.getElementById("ingredient-input");
+  var hintList = document.getElementById("hint-list");
+  var chipList = document.getElementById("chip-list");
+  var statusMessage = document.getElementById("status-message");
+  var resultList = document.getElementById("result-list");
+  var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+
+  if (!input || !hintList || !chipList || !statusMessage || !resultList) {
+    return;
+  }
+
+  var csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
+
+  var committed = [];
+  var excludedIds = new Set();
+  var requestCounter = 0;
+  var hintCounter = 0;
+  var debounceTimer = null;
+  var hints = [];
+  var activeHintIndex = -1;
+
+  function normalizeKey(value) {
+    return value.trim().toLowerCase().replace(/\s+/g, " ");
+  }
+
+  function commitPiece(piece) {
+    var trimmed = piece.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    var key = normalizeKey(trimmed);
+    if (committed.some(function (entry) { return normalizeKey(entry) === key; })) {
+      return;
+    }
+
+    committed.push(trimmed);
+  }
+
+  function buildText() {
+    return committed.join(", ") +
+      (committed.length ? ", " : "") +
+      input.value;
+  }
+
+  function scheduleSearch() {
+    if (debounceTimer !== null) {
+      clearTimeout(debounceTimer);
+    }
+
+    debounceTimer = setTimeout(function () {
+      debounceTimer = null;
+      runSearch();
+      runHints();
+    }, 150);
+  }
+
+  function setStatus(mainText, unknownTokens, showRemoveButton) {
+    statusMessage.textContent = "";
+
+    var main = document.createElement("p");
+    main.className = "mb-1";
+    main.textContent = mainText;
+    statusMessage.appendChild(main);
+
+    if (showRemoveButton) {
+      var removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.className = "btn btn-sm btn-outline-secondary mb-1";
+      removeButton.textContent = "Remove last ingredient";
+      removeButton.addEventListener("click", function () {
+        if (committed.length === 0) {
+          return;
+        }
+
+        committed.pop();
+        runSearch();
+      });
+      statusMessage.appendChild(removeButton);
+    }
+
+    (unknownTokens || []).forEach(function (token) {
+      var line = document.createElement("p");
+      line.className = "mb-1";
+      line.textContent = "\u201C" + token.raw + "\u201D isn\u2019t a known ingredient yet.";
+      statusMessage.appendChild(line);
+    });
+  }
+
+  function renderChips(tokens) {
+    chipList.textContent = "";
+
+    tokens.forEach(function (token) {
+      var chip = document.createElement("span");
+      var label;
+      var isUnknown = token.ingredientId === null || token.ingredientId === undefined;
+
+      if (isUnknown) {
+        chip.className = "badge text-bg-warning chip";
+        label = token.raw;
+      } else if (token.isExcluded) {
+        chip.className = "badge text-bg-secondary chip";
+        label = "no " + token.name;
+      } else {
+        chip.className = "badge text-bg-success chip";
+        label = token.raw.toLowerCase() === token.name.toLowerCase()
+          ? token.raw
+          : token.raw + " \u2192 " + token.name;
+      }
+
+      var text = document.createElement("span");
+      text.className = "chip-text";
+      text.textContent = label;
+      if (!isUnknown && token.isExcluded) {
+        text.classList.add("text-decoration-line-through");
+      }
+      chip.appendChild(text);
+
+      if (!isUnknown) {
+        var toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "btn btn-sm btn-link chip-button";
+        toggle.textContent = token.isExcluded ? "+" : "\u2212";
+        toggle.setAttribute(
+          "aria-label",
+          token.isExcluded
+            ? "Include " + token.name + " again"
+            : "Leave out " + token.name);
+        toggle.addEventListener("click", function () {
+          if (token.isExcluded) {
+            excludedIds.delete(token.ingredientId);
+          } else {
+            excludedIds.add(token.ingredientId);
+          }
+          runSearch();
+        });
+        chip.appendChild(toggle);
+      }
+
+      var remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "btn btn-sm btn-link chip-button";
+      remove.textContent = "\u00D7";
+      remove.setAttribute("aria-label", "Remove " + token.raw);
+      remove.addEventListener("click", function () {
+        committed.splice(token.index, 1);
+        runSearch();
+      });
+      chip.appendChild(remove);
+
+      chipList.appendChild(chip);
+    });
+  }
+
+  function renderDishes(dishes) {
+    resultList.textContent = "";
+
+    dishes.forEach(function (dish) {
+      var card = document.createElement("div");
+      card.className = "card mb-2";
+
+      var body = document.createElement("div");
+      body.className = "card-body";
+
+      var title = document.createElement("h2");
+      title.className = "h5 card-title mb-2";
+      var link = document.createElement("a");
+      link.href = "/Dish/Details/" + dish.id;
+      link.textContent = dish.name;
+      title.appendChild(link);
+      body.appendChild(title);
+
+      var meta = document.createElement("p");
+      meta.className = "mb-2";
+      var badge = document.createElement("span");
+      badge.className = "badge text-bg-secondary me-2";
+      badge.textContent = dish.cookingMethod;
+      meta.appendChild(badge);
+      var time = document.createElement("span");
+      time.className = "text-muted";
+      time.textContent = dish.cookTimeMinutes + " min";
+      meta.appendChild(time);
+      body.appendChild(meta);
+
+      var needed = document.createElement("p");
+      needed.className = "mb-0";
+      needed.textContent = dish.missingCount === 0
+        ? "You have everything!"
+        : "Still needed: " + (dish.stillNeeded || []).join(", ");
+      body.appendChild(needed);
+
+      card.appendChild(body);
+      resultList.appendChild(card);
+    });
+  }
+
+  function renderSearch(data) {
+    var tokens = Array.isArray(data.tokens) ? data.tokens : [];
+    var dishes = Array.isArray(data.dishes) ? data.dishes : [];
+    var unknownTokens = tokens.filter(function (token) {
+      return token.ingredientId === null || token.ingredientId === undefined;
+    });
+    var hasUsableIngredient = tokens.some(function (token) {
+      return token.ingredientId !== null &&
+        token.ingredientId !== undefined &&
+        token.isExcluded === false;
+    });
+
+    renderChips(tokens);
+    renderDishes(dishes);
+
+    if (!hasUsableIngredient) {
+      setStatus("Add at least one known ingredient to see dishes.", unknownTokens, false);
+    } else if (dishes.length === 0) {
+      setStatus("No dish contains all of these ingredients.", unknownTokens, true);
+    } else {
+      setStatus(
+        dishes.length + (dishes.length === 1 ? " dish found." : " dishes found."),
+        unknownTokens,
+        false);
+    }
+  }
+
+  function runSearch() {
+    var counter = ++requestCounter;
+
+    if (committed.length === 0) {
+      chipList.textContent = "";
+      resultList.textContent = "";
+      setStatus("Type an ingredient and press comma or Enter to begin.", [], false);
+      return;
+    }
+
+    fetch("/api/search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrfToken
+      },
+      body: JSON.stringify({
+        text: buildText(),
+        excludedIds: Array.from(excludedIds)
+      })
+    })
+      .then(function (response) {
+        if (counter !== requestCounter) {
+          return null;
+        }
+        if (!response.ok) {
+          setStatus("Something went wrong. Please try again.", [], false);
+          return null;
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (data === null || counter !== requestCounter) {
+          return;
+        }
+        renderSearch(data);
+      })
+      .catch(function () {
+        if (counter !== requestCounter) {
+          return;
+        }
+        setStatus("Something went wrong. Please try again.", [], false);
+      });
+  }
+
+  function hideHints() {
+    hintList.hidden = true;
+    hintList.textContent = "";
+    hints = [];
+    activeHintIndex = -1;
+    input.setAttribute("aria-expanded", "false");
+    input.removeAttribute("aria-activedescendant");
+  }
+
+  function updateActiveHint() {
+    var options = hintList.children;
+
+    for (var i = 0; i < options.length; i++) {
+      var isActive = i === activeHintIndex;
+      options[i].setAttribute("aria-selected", isActive ? "true" : "false");
+      options[i].classList.toggle("active", isActive);
+    }
+
+    if (activeHintIndex >= 0) {
+      input.setAttribute("aria-activedescendant", "hint-" + activeHintIndex);
+    } else {
+      input.removeAttribute("aria-activedescendant");
+    }
+  }
+
+  function chooseHint(index) {
+    var hint = hints[index];
+    if (!hint) {
+      return;
+    }
+
+    input.value = hint.text;
+    hideHints();
+    input.focus();
+  }
+
+  function renderHints(items) {
+    hints = items.slice(0, 8);
+    activeHintIndex = -1;
+    hintList.textContent = "";
+
+    if (hints.length === 0) {
+      hideHints();
+      return;
+    }
+
+    hints.forEach(function (hint, index) {
+      var option = document.createElement("li");
+      option.id = "hint-" + index;
+      option.className = "hint-option";
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", "false");
+
+      var text = document.createElement("span");
+      text.textContent = hint.text;
+      option.appendChild(text);
+
+      if (hint.ingredient && hint.ingredient !== hint.text) {
+        var ingredient = document.createElement("span");
+        ingredient.className = "text-muted ms-2";
+        ingredient.textContent = "(" + hint.ingredient + ")";
+        option.appendChild(ingredient);
+      }
+
+      option.addEventListener("click", function () {
+        chooseHint(index);
+      });
+
+      hintList.appendChild(option);
+    });
+
+    hintList.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+    updateActiveHint();
+  }
+
+  function runHints() {
+    var prefix = input.value.trim();
+    var counter = ++hintCounter;
+
+    if (!prefix) {
+      hideHints();
+      return;
+    }
+
+    fetch("/api/hints?prefix=" + encodeURIComponent(prefix))
+      .then(function (response) {
+        if (counter !== hintCounter) {
+          return null;
+        }
+        if (!response.ok) {
+          hideHints();
+          return null;
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        if (data === null || counter !== hintCounter) {
+          return;
+        }
+        renderHints(Array.isArray(data.hints) ? data.hints : []);
+      })
+      .catch(function () {
+        if (counter !== hintCounter) {
+          return;
+        }
+        hideHints();
+      });
+  }
+
+  input.addEventListener("input", function () {
+    var value = input.value;
+
+    if (/[,\n]/.test(value)) {
+      var pieces = value.split(/[,\n]/);
+      var last = pieces.pop();
+      pieces.forEach(commitPiece);
+      input.value = last;
+    }
+
+    scheduleSearch();
+  });
+
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      if (activeHintIndex >= 0) {
+        chooseHint(activeHintIndex);
+        event.preventDefault();
+        return;
+      }
+
+      var value = input.value.trim();
+      if (value) {
+        commitPiece(value);
+        input.value = "";
+        hideHints();
+        event.preventDefault();
+        runSearch();
+      }
+      return;
+    }
+
+    if (event.key === "Backspace" && input.value === "" && committed.length > 0) {
+      input.value = committed.pop();
+      event.preventDefault();
+      runSearch();
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      if (hintList.hidden || hints.length === 0) {
+        return;
+      }
+
+      var step = event.key === "ArrowDown" ? 1 : -1;
+      if (activeHintIndex < 0) {
+        activeHintIndex = step > 0 ? 0 : hints.length - 1;
+      } else {
+        activeHintIndex = (activeHintIndex + step + hints.length) % hints.length;
+      }
+
+      updateActiveHint();
+      event.preventDefault();
+      return;
+    }
+
+    if (event.key === "Escape") {
+      hideHints();
+    }
+  });
+
+  runSearch();
+}());
