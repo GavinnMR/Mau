@@ -2,6 +2,7 @@
 
 Mau recommends Filipino main dishes from ingredients you type.
 Type what you have, see the dishes you can cook, and open any dish for its ingredients and steps.
+You can also create an account to save a pantry, favorite dishes, and keep a recent-search history.
 
 ## Prerequisites
 
@@ -37,12 +38,23 @@ dotnet run --project src/Mau.Web --launch-profile https
 
 and open https://localhost:7070.
 
+## Accounts and saved data
+
+Register at `/Account/Register` and log in at `/Account/Login`. Guests can still search and open dishes.
+Signed-in users also get:
+
+- **Pantry** (`/Profile/Pantry`): tick the ingredients you usually have. A search can count them as ingredients you already have.
+- **Favorites** (`/Profile/Favorites`): dishes you saved from their details page.
+- **History** (`/Profile/History`): recent searches, newest first, with delete and clear.
+
+Pantry items, favorites, and history are stored in the same SQLite database as the catalog.
+
 ## Tests
 
 Run all tests from the repo root with `dotnet test`. To run one test class, use the filtered command in the table above.
 
 ## Database
 
-The app creates its SQLite database at `src/Mau.Web/mau.db` on first start, applies migrations, and seeds the catalog automatically. The file is git-ignored. Never run `dotnet ef database update`.
+The app creates its SQLite database at `src/Mau.Web/mau.db` on first start, applies migrations, and seeds the catalog automatically. The file is git-ignored and also holds the user accounts and their saved data. Never run `dotnet ef database update`.
 
-To reset the data, stop the app and delete `src/Mau.Web/mau.db` (plus `mau.db-shm` and `mau.db-wal` if they exist). The next start recreates, migrates, and seeds it.
+To reset the data, stop the app and delete `src/Mau.Web/mau.db` (plus `mau.db-shm` and `mau.db-wal` if they exist). Deleting the file also deletes all accounts. The next start recreates, migrates, and seeds it.
