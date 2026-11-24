@@ -7,6 +7,7 @@ namespace Mau.Core.Search;
 public sealed class SearchService : ISearchService
 {
     private static readonly IReadOnlySet<int> EmptyDishIds = new HashSet<int>();
+    private static readonly IReadOnlySet<int> EmptyIds = new HashSet<int>();
 
     private readonly CatalogStore _store;
 
@@ -20,6 +21,9 @@ public sealed class SearchService : ISearchService
         var snapshot = _store.Current;
         var parse = snapshot.Recognizer.Parse(request.Text);
         var excluded = new HashSet<int>(request.ExcludedIds ?? Array.Empty<int>());
+        IReadOnlySet<int> pantryIds = request.PantryIds is null
+            ? EmptyIds
+            : request.PantryIds.ToHashSet();
 
         var tokens = parse.Tokens
             .Select(token => CreateToken(token, snapshot, excluded))
@@ -72,7 +76,8 @@ public sealed class SearchService : ISearchService
             }
 
             var stillNeeded = dish.Ingredients
-                .Where(row => !row.IsOptional && !row.IsStaple && !includeIds.Contains(row.IngredientId))
+                .Where(row => !row.IsOptional && !row.IsStaple && !includeIds.Contains(row.IngredientId)
+                    && !pantryIds.Contains(row.IngredientId))
                 .Select(row => row.Name)
                 .ToList();
 

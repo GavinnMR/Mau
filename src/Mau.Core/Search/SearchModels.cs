@@ -2,8 +2,9 @@ using Mau.Core.Entities;
 
 namespace Mau.Core.Search;
 
-/// <summary>The typed text and the ingredient ids the user left out.</summary>
-public sealed record SearchRequest(string? Text, IReadOnlyCollection<int>? ExcludedIds);
+/// <summary>The typed text, the ingredient ids the user left out and the pantry ids.</summary>
+public sealed record SearchRequest(
+    string? Text, IReadOnlyCollection<int>? ExcludedIds, IReadOnlyCollection<int>? PantryIds = null);
 
 /// <summary>One committed token as shown to the user.</summary>
 public sealed record SearchToken(int Index, string Raw, int? IngredientId, string? IngredientName, bool IsExcluded);

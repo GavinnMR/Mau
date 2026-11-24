@@ -199,6 +199,79 @@ public class SearchServiceTests
         Assert.Null(dish);
     }
 
+    [Fact]
+    public async Task Search_ChickenWithPantry_ShrinksStillNeededAndReorders()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("chicken,", null, new[] { 3, 4 }));
+
+        AssertDishes(result,
+            ("Garlic fried chicken", new[] { "garlic" }),
+            ("Chicken adobo", new[] { "garlic" }),
+            ("Chicken tinola", new[] { "ginger", "onion", "garlic" }));
+    }
+
+    [Fact]
+    public async Task Search_ChickenWithNullPantry_MatchesPhaseOneResults()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("chicken,", null, null));
+
+        AssertDishes(result,
+            ("Garlic fried chicken", new[] { "garlic" }),
+            ("Chicken tinola", new[] { "ginger", "onion", "garlic" }),
+            ("Chicken adobo", new[] { "soy sauce", "vinegar", "garlic" }));
+    }
+
+    [Fact]
+    public async Task Search_PorkWithUnrelatedPantry_LeavesStillNeededUnchanged()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("pork,", null, new[] { 1 }));
+
+        AssertDishes(result,
+            ("Pork adobo", new[] { "soy sauce", "vinegar", "garlic" }));
+    }
+
+    [Fact]
+    public async Task Search_GarlicExcludingPorkWithPorkPantry_ExclusionWins()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("garlic,", new[] { 2 }, new[] { 2 }));
+
+        AssertDishes(result,
+            ("Garlic fried chicken", new[] { "chicken" }),
+            ("Chicken tinola", new[] { "chicken", "ginger", "onion" }),
+            ("Chicken adobo", new[] { "chicken", "soy sauce", "vinegar" }));
+    }
+
+    [Fact]
+    public async Task Search_ChickenWithUnknownPantryId_MatchesNoPantry()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("chicken,", null, new[] { 999 }));
+
+        AssertDishes(result,
+            ("Garlic fried chicken", new[] { "garlic" }),
+            ("Chicken tinola", new[] { "ginger", "onion", "garlic" }),
+            ("Chicken adobo", new[] { "soy sauce", "vinegar", "garlic" }));
+    }
+
+    [Fact]
+    public async Task Search_EmptyTextWithPantry_ReturnsNoDishes()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("", null, new[] { 1, 5 }));
+
+        Assert.Empty(result.Dishes);
+    }
+
     private static async Task<SearchService> CreateServiceAsync()
     {
         var store = new CatalogStore(new FakeCatalogLoader(TestCatalog.CreateSnapshot()));
