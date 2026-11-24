@@ -16,6 +16,10 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<IngredientSynonym> IngredientSynonyms => Set<IngredientSynonym>();
     public DbSet<Dish> Dishes => Set<Dish>();
     public DbSet<DishIngredient> DishIngredients => Set<DishIngredient>();
+    public DbSet<PantryItem> PantryItems => Set<PantryItem>();
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
+    public DbSet<SearchLogIngredient> SearchLogIngredients => Set<SearchLogIngredient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -79,6 +83,58 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(row => row.IngredientId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.Property(row => row.Unit).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<PantryItem>(entity =>
+        {
+            entity.HasKey(item => new { item.UserId, item.IngredientId });
+            entity.Property(item => item.UserId).HasMaxLength(450);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.Ingredient)
+                .WithMany()
+                .HasForeignKey(item => item.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Favorite>(entity =>
+        {
+            entity.HasKey(favorite => new { favorite.UserId, favorite.DishId });
+            entity.Property(favorite => favorite.UserId).HasMaxLength(450);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(favorite => favorite.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(favorite => favorite.Dish)
+                .WithMany()
+                .HasForeignKey(favorite => favorite.DishId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SearchLog>(entity =>
+        {
+            entity.HasKey(log => log.Id);
+            entity.Property(log => log.UserId).HasMaxLength(450);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(log => log.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasIndex(log => new { log.UserId, log.SearchedAt });
+        });
+
+        modelBuilder.Entity<SearchLogIngredient>(entity =>
+        {
+            entity.HasKey(row => new { row.SearchLogId, row.IngredientId });
+            entity.HasOne(row => row.SearchLog)
+                .WithMany(log => log.Ingredients)
+                .HasForeignKey(row => row.SearchLogId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(row => row.Ingredient)
+                .WithMany()
+                .HasForeignKey(row => row.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

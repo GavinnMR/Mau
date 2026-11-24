@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Mau.Core.Catalog;
 using Mau.Core.Search;
+using Mau.Core.Users;
 using Mau.Data;
 using Mau.Data.Identity;
 using Mau.Web.Api;
@@ -68,6 +69,13 @@ builder.Services.AddDbContextFactory<MauDbContext>((serviceProvider, options) =>
 builder.Services.AddSingleton<ICatalogLoader, EfCatalogLoader>();
 builder.Services.AddSingleton<CatalogStore>();
 builder.Services.AddSingleton<ISearchService, SearchService>();
+
+builder.Services.AddSingleton<IPantryStore, EfPantryStore>();
+builder.Services.AddSingleton<IFavoriteStore, EfFavoriteStore>();
+builder.Services.AddSingleton<ISearchLogStore, EfSearchLogStore>();
+builder.Services.AddSingleton<IPantryService, PantryService>();
+builder.Services.AddSingleton<IFavoriteService, FavoriteService>();
+builder.Services.AddSingleton<ISearchHistoryService, SearchHistoryService>();
 
 var app = builder.Build();
 
