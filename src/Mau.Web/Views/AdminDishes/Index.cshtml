@@ -1,0 +1,53 @@
+@using Mau.Web.ViewModels.Admin
+@model DishListViewModel
+@{
+    ViewData["Title"] = "Dishes";
+}
+
+<h1>Dishes</h1>
+
+<form method="get" class="row g-2 align-items-center mb-3">
+    <div class="col-auto">
+        <input name="q" type="search" class="form-control" value="@Model.Query" aria-label="Filter dishes" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-primary" href="/Admin/Dishes/Create">New dish</a>
+    </div>
+</form>
+
+@if (Model.Rows.Count == 0)
+{
+    <p>No dishes found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Method</th>
+                <th scope="col">Minutes</th>
+                <th scope="col">Ingredients</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model.Rows)
+            {
+                <tr data-id="@row.Id">
+                    <td>@row.Name</td>
+                    <td>@row.CookingMethod</td>
+                    <td>@row.CookTimeMinutes</td>
+                    <td>@row.IngredientCount</td>
+                    <td>
+                        <a href="/Admin/Dishes/Edit/@row.Id">Edit</a>
+                        <a href="/Admin/Dishes/Delete/@row.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

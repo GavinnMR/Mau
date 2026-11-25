@@ -1,0 +1,13 @@
+@using Mau.Web.ViewModels.Admin
+@model DishDeleteViewModel
+@{
+    ViewData["Title"] = "Delete dish";
+}
+
+<h1>Delete “@Model.Name”?</h1>
+<p>This also removes it from users' favorites.</p>
+
+<form method="post" asp-controller="AdminDishes" asp-action="DeleteConfirmed" asp-route-id="@Model.Id">
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a class="btn btn-secondary" href="/Admin/Dishes">Cancel</a>
+</form>

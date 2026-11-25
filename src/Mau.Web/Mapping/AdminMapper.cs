@@ -68,6 +68,26 @@ public static class AdminMapper
         return new IngredientListViewModel(cleanedQuery, rows);
     }
 
+    public static DishListViewModel ToDishListViewModel(
+        CatalogSnapshot catalog, string? query)
+    {
+        var cleanedQuery = Clean(query);
+
+        var rows = catalog.Dishes
+            .Where(dish => cleanedQuery.Length == 0 ||
+                dish.Name.Contains(cleanedQuery, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(dish => dish.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(dish => new DishRowViewModel(
+                dish.Id,
+                dish.Name,
+                dish.CookingMethod.ToString(),
+                dish.CookTimeMinutes,
+                dish.Ingredients.Count))
+            .ToList();
+
+        return new DishListViewModel(cleanedQuery, rows);
+    }
+
     public static void AddErrors(ModelStateDictionary modelState, AdminResult result)
     {
         foreach (var error in result.Errors)
