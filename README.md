@@ -49,6 +49,32 @@ Signed-in users also get:
 
 Pantry items, favorites, and history are stored in the same SQLite database as the catalog.
 
+## Admin
+
+The first admin is created at startup from user secrets, only when no user is in the `Admin` role yet.
+Set the secrets with placeholders replaced by your own values (never commit them):
+
+```powershell
+dotnet user-secrets init --project src/Mau.Web
+dotnet user-secrets set "Admin:Email" "your-email@example.com" --project src/Mau.Web
+dotnet user-secrets set "Admin:Password" "YourPassw0rd" --project src/Mau.Web
+```
+
+The password must have at least 8 characters and contain a digit and a lowercase letter.
+Restart the app, then log in with that email. If the email already has an account, that account
+becomes admin and keeps its existing password. While an admin already exists, changing the
+secrets does not create a second admin or change the password.
+
+Admin pages:
+
+- `/Admin` — dashboard with dish, ingredient and synonym counts.
+- `/Admin/Ingredients` — list, filter, create, edit and delete ingredients with their synonyms.
+- `/Admin/Dishes` — list, filter, create, edit and delete dishes with their ingredient rows and steps.
+
+To reset the admin, stop the app and delete `src/Mau.Web/mau.db` (plus `mau.db-shm` and
+`mau.db-wal` if they exist). The next start recreates the database and the admin from the current
+secrets. Deleting the file also deletes all accounts.
+
 ## Tests
 
 Run all tests from the repo root with `dotnet test`. To run one test class, use the filtered command in the table above.
