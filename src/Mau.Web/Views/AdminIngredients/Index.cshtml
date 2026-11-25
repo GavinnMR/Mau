@@ -1,0 +1,55 @@
+@using Mau.Web.ViewModels.Admin
+@model IngredientListViewModel
+@{
+    ViewData["Title"] = "Ingredients";
+}
+
+<h1>Ingredients</h1>
+
+<form method="get" class="row g-2 align-items-center mb-3">
+    <div class="col-auto">
+        <input name="q" type="search" class="form-control" value="@Model.Query" aria-label="Filter ingredients" />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-secondary">Filter</button>
+    </div>
+    <div class="col-auto">
+        <a class="btn btn-primary" href="/Admin/Ingredients/Create">New ingredient</a>
+    </div>
+</form>
+
+@if (Model.Rows.Count == 0)
+{
+    <p>No ingredients found.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Category</th>
+                <th scope="col">Staple</th>
+                <th scope="col">Synonyms</th>
+                <th scope="col">Used by</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var row in Model.Rows)
+            {
+                <tr data-id="@row.Id">
+                    <td>@row.Name</td>
+                    <td>@row.Category</td>
+                    <td>@(row.IsStaple ? "✓" : "")</td>
+                    <td>@row.Synonyms</td>
+                    <td>@row.UsedByDishes dishes</td>
+                    <td>
+                        <a href="/Admin/Ingredients/Edit/@row.Id">Edit</a>
+                        <a href="/Admin/Ingredients/Delete/@row.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

@@ -1,0 +1,26 @@
+@using Mau.Web.ViewModels.Admin
+@model IngredientDeleteViewModel
+@{
+    ViewData["Title"] = "Delete ingredient";
+}
+
+<h1>Delete “@Model.Name”?</h1>
+
+@if (Model.UsedByDishNames.Count > 0)
+{
+    <p>This ingredient is used by these dishes. Remove it from them first:</p>
+    <ul>
+        @foreach (var dishName in Model.UsedByDishNames)
+        {
+            <li>@dishName</li>
+        }
+    </ul>
+    <a class="btn btn-secondary" href="/Admin/Ingredients">Back</a>
+}
+else
+{
+    <form method="post" asp-controller="AdminIngredients" asp-action="DeleteConfirmed" asp-route-id="@Model.Id">
+        <button type="submit" class="btn btn-danger">Delete</button>
+        <a class="btn btn-secondary" href="/Admin/Ingredients">Cancel</a>
+    </form>
+}

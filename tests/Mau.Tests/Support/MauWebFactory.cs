@@ -18,22 +18,12 @@ public class MauWebFactory : WebApplicationFactory<Program>
     {
         builder.ConfigureAppConfiguration((_, configuration) =>
         {
-            var settings = new Dictionary<string, string?>
+            configuration.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:Default"] = $"Data Source={_databasePath}",
-            };
-
-            if (AdminEmail is not null)
-            {
-                settings["Admin:Email"] = AdminEmail;
-            }
-
-            if (AdminPassword is not null)
-            {
-                settings["Admin:Password"] = AdminPassword;
-            }
-
-            configuration.AddInMemoryCollection(settings);
+                ["Admin:Email"] = AdminEmail ?? "",
+                ["Admin:Password"] = AdminPassword ?? "",
+            });
         });
     }
 

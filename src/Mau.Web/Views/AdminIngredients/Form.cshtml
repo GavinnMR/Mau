@@ -1,0 +1,49 @@
+@using Mau.Core.Entities
+@using Mau.Web.ViewModels.Admin
+@model IngredientFormViewModel
+@{
+    ViewData["Title"] = Model.Id is null ? "New ingredient" : "Edit ingredient";
+    var action = Model.Id is null ? "Create" : "Edit";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post" asp-controller="AdminIngredients" asp-action="@action" asp-route-id="@Model.Id">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Category" class="form-label"></label>
+        <select asp-for="Category" asp-items="Html.GetEnumSelectList<IngredientCategory>()" class="form-select"></select>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="IsStaple" class="form-check-input" />
+        <label asp-for="IsStaple" class="form-check-label">Pantry staple (always assumed, never listed as needed)</label>
+    </div>
+
+    <h2>Synonyms</h2>
+    <p>Leave a row empty to remove it. Names cannot contain commas.</p>
+
+    @for (var i = 0; i < Model.Synonyms.Count; i++)
+    {
+        <div class="row g-2 mb-2">
+            <div class="col-md-6">
+                <label for="Synonyms_@(i)__Name" class="visually-hidden">Synonym @(i + 1)</label>
+                <input asp-for="Synonyms[i].Name" class="form-control" />
+            </div>
+            <div class="col-md-6">
+                <label for="Synonyms_@(i)__Language" class="visually-hidden">Language @(i + 1)</label>
+                <select asp-for="Synonyms[i].Language" asp-items="Html.GetEnumSelectList<SynonymLanguage>()" class="form-select"></select>
+            </div>
+        </div>
+    }
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a class="btn btn-secondary" href="/Admin/Ingredients">Cancel</a>
+</form>
