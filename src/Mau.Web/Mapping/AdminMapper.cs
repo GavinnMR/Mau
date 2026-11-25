@@ -1,7 +1,9 @@
+using System.Globalization;
 using Mau.Core.Admin;
 using Mau.Core.Catalog;
 using Mau.Web.ViewModels.Admin;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Mau.Web.Mapping;
 
@@ -67,6 +69,69 @@ public static class AdminMapper
 
         return new IngredientListViewModel(cleanedQuery, rows);
     }
+
+    public static DishInput ToDishInput(DishFormViewModel form)
+    {
+        var steps = (form.Steps ?? "")
+            .Replace("\r", "")
+            .Split('\n')
+            .Select(step => step.Trim())
+            .Where(step => step.Length > 0)
+            .ToArray();
+
+        return new DishInput(
+            form.Name,
+            form.Description,
+            form.CookingMethod,
+            form.CookTimeMinutes ?? 0,
+            steps,
+            form.Ingredients
+                .Select(row => new DishIngredientInput(
+                    row.IngredientId, row.Quantity, row.Unit, row.IsOptional))
+                .ToList());
+    }
+
+    public static DishFormViewModel FromDish(CatalogDish dish)
+    {
+        var form = new DishFormViewModel
+        {
+            Id = dish.Id,
+            Name = dish.Name,
+            Description = dish.Description,
+            CookingMethod = dish.CookingMethod,
+            CookTimeMinutes = dish.CookTimeMinutes,
+            Steps = string.Join("\r\n", dish.Steps),
+            Ingredients = dish.Ingredients
+                .Select(row => new DishIngredientFormRow
+                {
+                    IngredientId = row.IngredientId,
+                    Quantity = row.Quantity,
+                    Unit = row.Unit,
+                    IsOptional = row.IsOptional,
+                })
+                .ToList(),
+        };
+
+        PadDishRows(form, 3);
+        return form;
+    }
+
+    public static void PadDishRows(DishFormViewModel form, int minimumBlankRows)
+    {
+        while (form.Ingredients.Count(row => row.IngredientId is null) < minimumBlankRows)
+        {
+            form.Ingredients.Add(new DishIngredientFormRow());
+        }
+    }
+
+    public static IReadOnlyList<SelectListItem> IngredientOptions(
+        CatalogSnapshot catalog) =>
+        catalog.Ingredients
+            .OrderBy(ingredient => ingredient.CanonicalName, StringComparer.OrdinalIgnoreCase)
+            .Select(ingredient => new SelectListItem(
+                ingredient.CanonicalName,
+                ingredient.Id.ToString(CultureInfo.InvariantCulture)))
+            .ToList();
 
     public static DishListViewModel ToDishListViewModel(
         CatalogSnapshot catalog, string? query)

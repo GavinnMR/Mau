@@ -1,0 +1,87 @@
+@using Mau.Core.Entities
+@using Mau.Web.ViewModels.Admin
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model DishFormViewModel
+@{
+    ViewData["Title"] = Model.Id is null ? "New dish" : "Edit dish";
+    var action = Model.Id is null ? "Create" : "Edit";
+    var ingredientOptions = new List<SelectListItem>
+    {
+        new("— choose —", ""),
+    };
+    ingredientOptions.AddRange(Model.IngredientOptions);
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<form method="post" asp-controller="AdminDishes" asp-action="@action" asp-route-id="@Model.Id">
+    <div asp-validation-summary="All" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Description" class="form-label"></label>
+        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label asp-for="CookingMethod" class="form-label"></label>
+            <select asp-for="CookingMethod" asp-items="Html.GetEnumSelectList<CookingMethod>()" class="form-select"></select>
+        </div>
+        <div class="col-md-6 mb-3">
+            <label asp-for="CookTimeMinutes" class="form-label"></label>
+            <input asp-for="CookTimeMinutes" type="number" min="1" max="600" class="form-control" />
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Steps" class="form-label"></label>
+        <textarea asp-for="Steps" class="form-control" rows="8"></textarea>
+        <div class="form-text">One step per line.</div>
+    </div>
+
+    <h2>Ingredients</h2>
+    <p>Leave the ingredient empty to remove a row.</p>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Ingredient</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Unit</th>
+                <th scope="col">Optional</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Model.Ingredients.Count; i++)
+            {
+                <tr>
+                    <td>
+                        <label for="Ingredients_@(i)__IngredientId" class="visually-hidden">Ingredient @(i + 1)</label>
+                        <select asp-for="Ingredients[i].IngredientId" asp-items="ingredientOptions" class="form-select"></select>
+                    </td>
+                    <td>
+                        <label for="Ingredients_@(i)__Quantity" class="visually-hidden">Quantity @(i + 1)</label>
+                        <input name="Ingredients[@i].Quantity" id="Ingredients_@(i)__Quantity" value="@Model.Ingredients[i].Quantity" type="number" step="any" min="0" class="form-control" />
+                    </td>
+                    <td>
+                        <label for="Ingredients_@(i)__Unit" class="visually-hidden">Unit @(i + 1)</label>
+                        <input name="Ingredients[@i].Unit" id="Ingredients_@(i)__Unit" value="@Model.Ingredients[i].Unit" maxlength="20" class="form-control" />
+                    </td>
+                    <td>
+                        <input asp-for="Ingredients[i].IsOptional" class="form-check-input" />
+                        <label asp-for="Ingredients[i].IsOptional" class="form-check-label">Optional</label>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a class="btn btn-secondary" href="/Admin/Dishes">Cancel</a>
+</form>
