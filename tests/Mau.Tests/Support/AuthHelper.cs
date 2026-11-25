@@ -7,6 +7,8 @@ namespace Mau.Tests.Support;
 public static class AuthHelper
 {
     public const string Password = "Passw0rd1";
+    public const string AdminEmail = "admin@example.com";
+    public const string AdminPassword = "Adm1nPassw0rd";
 
     public static string NewEmail() => $"user-{Guid.NewGuid():N}@example.com";
 
@@ -74,6 +76,9 @@ public static class AuthHelper
 
         return email;
     }
+
+    public static Task LoginAsAdminAsync(HttpClient client) =>
+        LoginAsync(client, AdminEmail, AdminPassword);
 
     public static async Task LoginAsync(
         HttpClient client, string email, string password = Password)

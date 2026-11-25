@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json.Serialization;
 using Mau.Core.Admin;
 using Mau.Core.Catalog;
@@ -6,7 +7,9 @@ using Mau.Core.Users;
 using Mau.Data;
 using Mau.Data.Identity;
 using Mau.Web.Api;
+using Mau.Web.Startup;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -83,6 +86,14 @@ builder.Services.AddSingleton<ISearchHistoryService, SearchHistoryService>();
 
 var app = builder.Build();
 
+var enUs = new CultureInfo("en-US");
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(enUs),
+    SupportedCultures = [enUs],
+    SupportedUICultures = [enUs],
+});
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -102,6 +113,7 @@ app.MapControllerRoute(
     .WithStaticAssets();
 
 await DatabaseInitializer.InitializeAsync(app.Services);
+await AdminSeeder.EnsureAdminAsync(app.Services);
 await app.Services.GetRequiredService<CatalogStore>().ReloadAsync();
 
 app.Run();

@@ -1,0 +1,16 @@
+@using Mau.Web.ViewModels.Admin
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<h1>Admin</h1>
+
+<ul class="list-group mb-3">
+    <li class="list-group-item">Dishes: @Model.DishCount</li>
+    <li class="list-group-item">Ingredients: @Model.IngredientCount</li>
+    <li class="list-group-item">Synonyms: @Model.SynonymCount</li>
+</ul>
+
+<a class="btn btn-primary" href="/Admin/Dishes">Manage dishes</a>
+<a class="btn btn-primary" href="/Admin/Ingredients">Manage ingredients</a>

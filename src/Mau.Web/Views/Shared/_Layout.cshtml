@@ -27,6 +27,12 @@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <ul class="navbar-nav flex-grow-1">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/Admin">Admin</a>
+                                </li>
+                            }
                             <li class="nav-item">
                                 <a class="nav-link" href="/Profile/Pantry">Pantry</a>
                             </li>
@@ -67,6 +73,10 @@
         @if (TempData["StatusMessage"] is string status)
         {
             <div class="alert alert-success" role="status">@status</div>
+        }
+        @if (TempData["ErrorMessage"] is string error)
+        {
+            <div class="alert alert-danger" role="alert">@error</div>
         }
         <main role="main" class="pb-3">
             @RenderBody()
