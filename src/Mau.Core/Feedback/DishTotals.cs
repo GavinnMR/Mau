@@ -4,9 +4,6 @@ namespace Mau.Core.Feedback;
 public sealed record DishTotals(int CookedCount, int UpCount, int DownCount)
 {
     public static DishTotals Empty { get; } = new(0, 0, 0);
-
-    /// <summary>2 per cook, +1 per thumbs up, -1 per thumbs down, never below 0.</summary>
-    public int Points => Math.Max(0, (2 * CookedCount) + UpCount - DownCount);
 }
 
 /// <summary>One user's feedback on one dish.</summary>

@@ -13,7 +13,7 @@ public sealed record TokenDto(
 
 public sealed record DishCardDto(
     int Id, string Name, CookingMethod CookingMethod, int CookTimeMinutes,
-    IReadOnlyList<string> StillNeeded, int MissingCount);
+    IReadOnlyList<string> StillNeeded, int MissingCount, double Score);
 
 public sealed record SearchResponseDto(
     IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied)

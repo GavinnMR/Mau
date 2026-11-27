@@ -165,14 +165,4 @@ public class FeedbackStoreTests
         Assert.Null(row.UserId);
         Assert.Equal(1, (await check.DishStats.SingleAsync()).CookedCount);
     }
-
-    [Theory]
-    [InlineData(0, 0, 0, 0)]
-    [InlineData(1, 1, 0, 3)]
-    [InlineData(0, 1, 3, 0)]
-    [InlineData(2, 0, 1, 3)]
-    public void Points_FollowTheFsdFormula(int cooked, int up, int down, int expected)
-    {
-        Assert.Equal(expected, new DishTotals(cooked, up, down).Points);
-    }
 }

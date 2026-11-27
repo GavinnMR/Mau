@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 namespace Mau.Core.Feedback;
 
 /// <summary>Keeps every dish's feedback totals in memory so searches never wait on the database.</summary>
-public sealed class DishStatsCache
+public sealed class DishStatsCache : IDishTotalsSource
 {
     private readonly IFeedbackStore _store;
     private ImmutableDictionary<int, DishTotals> _totals = ImmutableDictionary<int, DishTotals>.Empty;

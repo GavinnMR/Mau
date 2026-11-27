@@ -75,7 +75,8 @@ public static class DishMapper
                     dish.CookingMethod,
                     dish.CookTimeMinutes,
                     dish.StillNeeded,
-                    dish.MissingCount))
+                    dish.MissingCount,
+                    Math.Round(dish.Score, 4)))
                 .ToList(),
             pantryApplied);
 

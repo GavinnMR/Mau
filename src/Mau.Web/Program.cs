@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Mau.Core.Admin;
 using Mau.Core.Catalog;
 using Mau.Core.Feedback;
+using Mau.Core.Ranking;
 using Mau.Core.Search;
 using Mau.Core.Users;
 using Mau.Data;
@@ -13,6 +14,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,6 +76,13 @@ builder.Services.AddDbContextFactory<MauDbContext>((serviceProvider, options) =>
 builder.Services.AddSingleton<ICatalogLoader, EfCatalogLoader>();
 builder.Services.AddSingleton<CatalogStore>();
 builder.Services.AddSingleton<ISearchService, SearchService>();
+builder.Services.Configure<RankingOptions>(
+    builder.Configuration.GetSection(RankingOptions.SectionName));
+builder.Services.AddSingleton(serviceProvider =>
+    serviceProvider.GetRequiredService<IOptions<RankingOptions>>().Value);
+builder.Services.AddSingleton<IRankingService>(serviceProvider => new RankingService(
+    serviceProvider.GetRequiredService<DishStatsCache>(),
+    serviceProvider.GetRequiredService<RankingOptions>()));
 
 builder.Services.AddSingleton<ICatalogAdminStore, EfCatalogAdminStore>();
 builder.Services.AddSingleton<ICatalogAdminService, CatalogAdminService>();
