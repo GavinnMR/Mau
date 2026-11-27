@@ -73,7 +73,7 @@ public static class DishMapper
                     token.IngredientId,
                     token.IngredientName,
                     token.IsExcluded,
-                    Array.Empty<string>()))
+                    token.Suggestions))
                 .ToList(),
             result.Dishes
                 .Select(dish => new DishCardDto(

@@ -14,11 +14,14 @@ public sealed class SearchService : ISearchService
 
     private readonly CatalogStore _store;
     private readonly IRankingService _ranking;
+    private readonly FuzzyOptions _fuzzy;
 
-    public SearchService(CatalogStore store, IRankingService? ranking = null)
+    public SearchService(
+        CatalogStore store, IRankingService? ranking = null, FuzzyOptions? fuzzy = null)
     {
         _store = store;
         _ranking = ranking ?? new RankingService(NoDishTotals.Instance, new RankingOptions());
+        _fuzzy = fuzzy ?? new FuzzyOptions();
     }
 
     public SearchResult Search(SearchRequest request)
@@ -32,6 +35,14 @@ public sealed class SearchService : ISearchService
 
         var tokens = parse.Tokens
             .Select(token => CreateToken(token, snapshot, excluded))
+            .Select(token => token.IngredientId is null
+                ? token with
+                {
+                    Suggestions = snapshot.Fuzzy.Suggest(token.Raw, _fuzzy)
+                        .Select(suggestion => suggestion.Text)
+                        .ToList(),
+                }
+                : token)
             .ToList();
 
         var includeIds = tokens

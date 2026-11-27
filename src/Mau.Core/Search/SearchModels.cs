@@ -12,7 +12,11 @@ public sealed record SearchRequest(
     UserPreferences? Preferences = null, IReadOnlyCollection<int>? NeverIds = null);
 
 /// <summary>One committed token as shown to the user.</summary>
-public sealed record SearchToken(int Index, string Raw, int? IngredientId, string? IngredientName, bool IsExcluded);
+public sealed record SearchToken(int Index, string Raw, int? IngredientId, string? IngredientName, bool IsExcluded)
+{
+    /// <summary>For an unknown word, the closest known names ("Did you mean...?"), closest first.</summary>
+    public IReadOnlyList<string> Suggestions { get; init; } = [];
+}
 
 /// <summary>A dish that contains every included ingredient.</summary>
 public sealed record DishMatch(

@@ -262,6 +262,18 @@ public class SearchServiceTests
     }
 
     [Fact]
+    public async Task Search_UnknownWord_CarriesSuggestionsAndKnownWordsDoNot()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("chicken, garlik,", null));
+
+        Assert.Empty(result.Tokens[0].Suggestions);
+        Assert.Null(result.Tokens[1].IngredientId);
+        Assert.Equal(new[] { "garlic" }, result.Tokens[1].Suggestions);
+    }
+
+    [Fact]
     public async Task Search_MarksWhichPreferencesEachDishMatches()
     {
         var service = await CreateServiceAsync();
