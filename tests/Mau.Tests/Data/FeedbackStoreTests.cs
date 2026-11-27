@@ -14,6 +14,8 @@ public class FeedbackStoreTests
     private static EfFeedbackStore CreateStore(TestDatabase database) =>
         new(database.ContextFactory, new FixedTimeProvider(StartTime));
 
+    private static string NewKey() => Guid.NewGuid().ToString("N");
+
     [Fact]
     public async Task AddCooked_SavesRowAndCountsIt()
     {
@@ -22,7 +24,7 @@ public class FeedbackStoreTests
         var store = CreateStore(database);
         var dishId = (await database.GetDishIdsAsync(1))[0];
 
-        var totals = await store.AddCookedAsync("u1", dishId);
+        var totals = await store.AddCookedAsync("u1", dishId, NewKey());
 
         Assert.Equal(new DishTotals(1, 0, 0), totals);
         await using var context = await database.CreateContextAsync();
@@ -32,18 +34,52 @@ public class FeedbackStoreTests
     }
 
     [Fact]
-    public async Task AddCooked_Twice_CountsBoth()
+    public async Task AddCooked_TwoSearches_CountsBoth()
     {
         await using var database = await TestDatabase.CreateAsync();
         await database.CreateUserAsync("u1");
         var store = CreateStore(database);
         var dishId = (await database.GetDishIdsAsync(1))[0];
 
-        await store.AddCookedAsync("u1", dishId);
-        var totals = await store.AddCookedAsync("u1", dishId);
+        await store.AddCookedAsync("u1", dishId, NewKey());
+        var totals = await store.AddCookedAsync("u1", dishId, NewKey());
 
+        Assert.NotNull(totals);
         Assert.Equal(2, totals.CookedCount);
         Assert.Equal(2, (await store.GetUserFeedbackAsync("u1", dishId)).CookedCount);
+    }
+
+    [Fact]
+    public async Task AddCooked_SameSearchTwice_SecondIsRejected()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        await database.CreateUserAsync("u1");
+        var store = CreateStore(database);
+        var dishId = (await database.GetDishIdsAsync(1))[0];
+        var key = NewKey();
+
+        await store.AddCookedAsync("u1", dishId, key);
+        var second = await store.AddCookedAsync("u1", dishId, key);
+
+        Assert.Null(second);
+        Assert.True(await store.HasCookedForSearchAsync("u1", dishId, key));
+        Assert.Equal(1, (await store.GetAllTotalsAsync())[dishId].CookedCount);
+    }
+
+    [Fact]
+    public async Task AddCooked_SameSearchOtherDish_IsAllowed()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        await database.CreateUserAsync("u1");
+        var store = CreateStore(database);
+        var dishIds = await database.GetDishIdsAsync(2);
+        var key = NewKey();
+
+        await store.AddCookedAsync("u1", dishIds[0], key);
+        var second = await store.AddCookedAsync("u1", dishIds[1], key);
+
+        Assert.NotNull(second);
+        Assert.False(await store.HasCookedForSearchAsync("u1", dishIds[0], NewKey()));
     }
 
     [Fact]
@@ -100,7 +136,7 @@ public class FeedbackStoreTests
         await database.CreateUserAsync("u1");
         var store = CreateStore(database);
         var dishId = (await database.GetDishIdsAsync(1))[0];
-        await store.AddCookedAsync("u1", dishId);
+        await store.AddCookedAsync("u1", dishId, NewKey());
 
         var totals = await store.SetVoteAsync("u1", dishId, Vote.None);
 
@@ -114,7 +150,7 @@ public class FeedbackStoreTests
         await database.CreateUserAsync("u1");
         var store = CreateStore(database);
         var dishIds = await database.GetDishIdsAsync(3);
-        await store.AddCookedAsync("u1", dishIds[0]);
+        await store.AddCookedAsync("u1", dishIds[0], NewKey());
         await store.SetVoteAsync("u1", dishIds[1], Vote.Down);
 
         var totals = await store.GetAllTotalsAsync();
@@ -132,7 +168,7 @@ public class FeedbackStoreTests
         await database.CreateUserAsync("u1");
         var store = CreateStore(database);
         var dishId = (await database.GetDishIdsAsync(1))[0];
-        await store.AddCookedAsync("u1", dishId);
+        await store.AddCookedAsync("u1", dishId, NewKey());
 
         await using (var context = await database.CreateContextAsync())
         {
@@ -152,7 +188,7 @@ public class FeedbackStoreTests
         await database.CreateUserAsync("u1");
         var store = CreateStore(database);
         var dishId = (await database.GetDishIdsAsync(1))[0];
-        await store.AddCookedAsync("u1", dishId);
+        await store.AddCookedAsync("u1", dishId, NewKey());
 
         await using (var context = await database.CreateContextAsync())
         {

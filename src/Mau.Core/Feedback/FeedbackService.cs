@@ -16,33 +16,59 @@ public sealed class FeedbackService : IFeedbackService
         _stats = stats;
     }
 
-    public async Task<FeedbackResult?> GiveAsync(
-        string userId, int dishId, FeedbackAction action, CancellationToken ct = default)
+    public async Task<FeedbackResult> GiveAsync(
+        string userId, int dishId, FeedbackAction action, string? searchKey,
+        CancellationToken ct = default)
     {
         if (!_catalog.Current.DishesById.ContainsKey(dishId))
         {
-            return null;
+            return new FeedbackResult(
+                FeedbackOutcome.DishNotFound, UserDishFeedback.None, DishTotals.Empty);
         }
 
-        DishTotals totals;
         if (action == FeedbackAction.Cooked)
         {
-            totals = await _store.AddCookedAsync(userId, dishId, ct);
-        }
-        else
-        {
-            var wanted = action == FeedbackAction.ThumbsUp ? Vote.Up : Vote.Down;
-            var current = await _store.GetUserFeedbackAsync(userId, dishId, ct);
-            totals = await _store.SetVoteAsync(
-                userId, dishId, current.Vote == wanted ? Vote.None : wanted, ct);
+            if (string.IsNullOrEmpty(searchKey))
+            {
+                return await CurrentAsync(FeedbackOutcome.SearchRequired, userId, dishId, ct);
+            }
+
+            var totals = await _store.AddCookedAsync(userId, dishId, searchKey, ct);
+            if (totals is null)
+            {
+                return await CurrentAsync(FeedbackOutcome.AlreadyCookedForSearch, userId, dishId, ct);
+            }
+
+            return await SavedAsync(userId, dishId, totals, ct);
         }
 
-        _stats.Set(dishId, totals);
-        var user = await _store.GetUserFeedbackAsync(userId, dishId, ct);
-        return new FeedbackResult(user, totals);
+        var wanted = action == FeedbackAction.ThumbsUp ? Vote.Up : Vote.Down;
+        var current = await _store.GetUserFeedbackAsync(userId, dishId, ct);
+        var newTotals = await _store.SetVoteAsync(
+            userId, dishId, current.Vote == wanted ? Vote.None : wanted, ct);
+        return await SavedAsync(userId, dishId, newTotals, ct);
     }
 
     public Task<UserDishFeedback> GetForUserAsync(
         string userId, int dishId, CancellationToken ct = default) =>
         _store.GetUserFeedbackAsync(userId, dishId, ct);
+
+    public Task<bool> HasCookedForSearchAsync(
+        string userId, int dishId, string searchKey, CancellationToken ct = default) =>
+        _store.HasCookedForSearchAsync(userId, dishId, searchKey, ct);
+
+    private async Task<FeedbackResult> SavedAsync(
+        string userId, int dishId, DishTotals totals, CancellationToken ct)
+    {
+        _stats.Set(dishId, totals);
+        var user = await _store.GetUserFeedbackAsync(userId, dishId, ct);
+        return new FeedbackResult(FeedbackOutcome.Saved, user, totals);
+    }
+
+    private async Task<FeedbackResult> CurrentAsync(
+        FeedbackOutcome outcome, string userId, int dishId, CancellationToken ct)
+    {
+        var user = await _store.GetUserFeedbackAsync(userId, dishId, ct);
+        return new FeedbackResult(outcome, user, _stats.Get(dishId));
+    }
 }

@@ -67,6 +67,10 @@ namespace Mau.Data.Migrations
                     b.Property<int>("DishId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("SearchKey")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -82,7 +86,9 @@ namespace Mau.Data.Migrations
 
                     b.HasIndex("DishId");
 
-                    b.HasIndex("UserId", "DishId");
+                    b.HasIndex("UserId", "DishId", "SearchKey")
+                        .IsUnique()
+                        .HasFilter("\"SearchKey\" IS NOT NULL");
 
                     b.ToTable("DishFeedback");
                 });

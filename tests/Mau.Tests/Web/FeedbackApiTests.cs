@@ -21,22 +21,24 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
     {
         using var client = AuthHelper.CreateClient(_factory);
         var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var search = await SearchHelper.GetSearchTokenAsync(client, token);
 
-        using var response = await PostAsync(client, DishId("Chicken adobo"), "cooked", token);
+        using var response = await PostAsync(client, DishId("Chicken adobo"), "cooked", search, token);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
-    public async Task LoggedIn_Cooked_ReturnsCountsAndUpdatesCache()
+    public async Task LoggedIn_CookedFromSearch_ReturnsCountsAndUpdatesCache()
     {
         using var client = AuthHelper.CreateClient(_factory);
         await AuthHelper.RegisterAsync(client);
         var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var search = await SearchHelper.GetSearchTokenAsync(client, token, "pork,");
         var dishId = DishId("Pork adobo");
         var before = Cache().Get(dishId).CookedCount;
 
-        using var response = await PostAsync(client, dishId, "cooked", token);
+        using var response = await PostAsync(client, dishId, "cooked", search, token);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -47,19 +49,72 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
     }
 
     [Fact]
-    public async Task LoggedIn_ThumbsUpTwice_TogglesOff()
+    public async Task LoggedIn_CookedTwiceSameSearch_SecondIsConflictAndNotCounted()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var search = await SearchHelper.GetSearchTokenAsync(client, token);
+        var dishId = DishId("Chicken afritada");
+
+        using (var first = await PostAsync(client, dishId, "cooked", search, token))
+        {
+            Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        }
+
+        var afterFirst = Cache().Get(dishId).CookedCount;
+        using var second = await PostAsync(client, dishId, "cooked", search, token);
+
+        Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
+        Assert.Equal(afterFirst, Cache().Get(dishId).CookedCount);
+    }
+
+    [Fact]
+    public async Task LoggedIn_CookedAfterNewSearch_CountsAgain()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var dishId = DishId("Chicken afritada");
+
+        foreach (var expected in new[] { 1, 2 })
+        {
+            var search = await SearchHelper.GetSearchTokenAsync(client, token);
+            using var response = await PostAsync(client, dishId, "cooked", search, token);
+            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            Assert.Equal(expected, json.RootElement.GetProperty("cookedByYou").GetInt32());
+        }
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("forged-token")]
+    public async Task LoggedIn_CookedWithoutValidSearch_ReturnsBadRequest(string? search)
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+
+        using var response = await PostAsync(client, DishId("Chicken adobo"), "cooked", search, token);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("search results", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task LoggedIn_ThumbsUpTwice_TogglesOff_WithoutSearch()
     {
         using var client = AuthHelper.CreateClient(_factory);
         await AuthHelper.RegisterAsync(client);
         var token = await AuthHelper.GetCsrfTokenAsync(client);
         var dishId = DishId("Chicken tinola");
 
-        using (var first = await PostAsync(client, dishId, "thumbsUp", token))
+        using (var first = await PostAsync(client, dishId, "thumbsUp", null, token))
         {
             Assert.Equal("up", await ReadVoteAsync(first));
         }
 
-        using var second = await PostAsync(client, dishId, "thumbsUp", token);
+        using var second = await PostAsync(client, dishId, "thumbsUp", null, token);
         Assert.Equal("none", await ReadVoteAsync(second));
     }
 
@@ -69,8 +124,9 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
         using var client = AuthHelper.CreateClient(_factory);
         await AuthHelper.RegisterAsync(client);
         var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var search = await SearchHelper.GetSearchTokenAsync(client, token);
 
-        using var response = await PostAsync(client, 999999, "cooked", token);
+        using var response = await PostAsync(client, 999999, "cooked", search, token);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -84,7 +140,7 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
         await AuthHelper.RegisterAsync(client);
         var token = await AuthHelper.GetCsrfTokenAsync(client);
 
-        using var response = await PostAsync(client, DishId("Chicken adobo"), type, token);
+        using var response = await PostAsync(client, DishId("Chicken adobo"), type, null, token);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
@@ -97,9 +153,23 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
         using var client = AuthHelper.CreateClient(_factory);
         await AuthHelper.RegisterAsync(client);
 
-        using var response = await PostAsync(client, DishId("Chicken adobo"), "cooked", "bad-token");
+        using var response = await PostAsync(client, DishId("Chicken adobo"), "thumbsUp", null, "bad-token");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Search_WithResults_IssuesToken_WithoutResults_DoesNot()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+
+        Assert.False(string.IsNullOrEmpty(await SearchHelper.GetSearchTokenAsync(client, token)));
+
+        using var response = await AuthHelper.SendJsonAsync(
+            client, HttpMethod.Post, "/api/search", new { text = "chicken, pork," }, token);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("searchToken").ValueKind);
     }
 
     private int DishId(string name) =>
@@ -109,9 +179,9 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
     private DishStatsCache Cache() => _factory.Services.GetRequiredService<DishStatsCache>();
 
     private static Task<HttpResponseMessage> PostAsync(
-        HttpClient client, int dishId, string type, string token) =>
+        HttpClient client, int dishId, string type, string? search, string token) =>
         AuthHelper.SendJsonAsync(
-            client, HttpMethod.Post, "/api/feedback", new { dishId, type }, token);
+            client, HttpMethod.Post, "/api/feedback", new { dishId, type, search }, token);
 
     private static async Task<string?> ReadVoteAsync(HttpResponseMessage response)
     {
@@ -144,37 +214,55 @@ public class FeedbackPageTests : IClassFixture<MauWebFactory>
     }
 
     [Fact]
-    public async Task LoggedIn_AfterFeedback_PageShowsPressedVoteAndOwnCount()
+    public async Task LoggedIn_OpenedDirectly_CookedIsDisabledWithHint()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+
+        var html = await GetDetailsAsync(client, "Chicken adobo");
+
+        Assert.Matches("data-feedback=\"cooked\" disabled\\s+aria-describedby=\"cooked-hint\"", html);
+        Assert.Contains("Open this dish from your search results", html);
+    }
+
+    [Fact]
+    public async Task LoggedIn_OpenedFromSearch_CookedIsAvailable_ThenDone()
     {
         using var client = AuthHelper.CreateClient(_factory);
         await AuthHelper.RegisterAsync(client);
         var token = await AuthHelper.GetCsrfTokenAsync(client);
-        var dishId = _factory.Services.GetRequiredService<CatalogStore>().Current.DishesById.Values
-            .Single(dish => dish.Name == "Garlic fried chicken").Id;
+        var search = await SearchHelper.GetSearchTokenAsync(client, token);
+        var dishId = DishId("Garlic fried chicken");
+
+        var before = await GetDetailsAsync(client, "Garlic fried chicken", search);
+        Assert.Contains("data-feedback=\"cooked\">I cooked this</button>", before);
+        Assert.DoesNotContain("cooked-hint", before);
 
         foreach (var type in new[] { "cooked", "thumbsDown" })
         {
             using var response = await AuthHelper.SendJsonAsync(
-                client, HttpMethod.Post, "/api/feedback", new { dishId, type }, token);
+                client, HttpMethod.Post, "/api/feedback", new { dishId, type, search }, token);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
-        var html = await GetDetailsAsync(client, "Garlic fried chicken");
+        var after = await GetDetailsAsync(client, "Garlic fried chicken", search);
 
-        Assert.Contains("data-feedback=\"cooked\"", html);
+        Assert.Contains("data-feedback=\"cooked\" disabled>Marked as cooked", after);
         Assert.Matches(
-            "data-feedback=\"thumbsDown\"\\s+aria-label=\"Thumbs down\" aria-pressed=\"true\"", html);
-        Assert.Matches(
-            "data-feedback=\"thumbsUp\"\\s+aria-label=\"Thumbs up\" aria-pressed=\"false\"", html);
-        Assert.Contains("You cooked this 1 time.", html);
-        Assert.Contains("feedback.js", html);
+            "data-feedback=\"thumbsDown\"\\s+aria-label=\"Thumbs down\" aria-pressed=\"true\"", after);
+        Assert.Contains("You cooked this 1 time.", after);
+        Assert.Contains("feedback.js", after);
     }
 
-    private async Task<string> GetDetailsAsync(HttpClient client, string name)
-    {
-        var dishId = _factory.Services.GetRequiredService<CatalogStore>().Current.DishesById.Values
+    private int DishId(string name) =>
+        _factory.Services.GetRequiredService<CatalogStore>().Current.DishesById.Values
             .Single(dish => dish.Name == name).Id;
-        using var response = await client.GetAsync($"/Dish/Details/{dishId}");
+
+    private async Task<string> GetDetailsAsync(HttpClient client, string name, string? search = null)
+    {
+        var url = $"/Dish/Details/{DishId(name)}" +
+            (search is null ? "" : "?search=" + Uri.EscapeDataString(search));
+        using var response = await client.GetAsync(url);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return await response.Content.ReadAsStringAsync();
     }

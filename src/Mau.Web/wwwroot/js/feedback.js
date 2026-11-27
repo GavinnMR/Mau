@@ -12,6 +12,9 @@
 
   var csrfToken = csrfMeta.getAttribute("content");
   var dishId = Number(section.getAttribute("data-dish-id"));
+  var searchToken = section.getAttribute("data-search") || null;
+  var cookedButton = section.querySelector('[data-feedback="cooked"]');
+  var cookedDone = cookedButton === null || cookedButton.disabled;
   var buttons = section.querySelectorAll("button[data-feedback]");
 
   function setTotal(name, value) {
@@ -50,9 +53,17 @@
     return "Your vote was removed.";
   }
 
+  function markCookedDone() {
+    cookedDone = true;
+    if (cookedButton) {
+      cookedButton.disabled = true;
+      cookedButton.textContent = "Marked as cooked \u2713";
+    }
+  }
+
   function setBusy(busy) {
     buttons.forEach(function (button) {
-      button.disabled = busy;
+      button.disabled = busy || (button === cookedButton && cookedDone);
     });
   }
 
@@ -75,12 +86,17 @@
           "Content-Type": "application/json",
           "X-CSRF-TOKEN": csrfToken
         },
-        body: JSON.stringify({ dishId: dishId, type: type })
+        body: JSON.stringify({ dishId: dishId, type: type, search: searchToken })
       })
         .then(function (response) {
           if (response.status === 401) {
             location.href = "/Account/Login?returnUrl=" +
               encodeURIComponent(location.pathname);
+            return null;
+          }
+          if (response.status === 409) {
+            markCookedDone();
+            status.textContent = "You already marked this dish as cooked for this search.";
             return null;
           }
           if (!response.ok) {
@@ -92,6 +108,9 @@
         .then(function (data) {
           if (data) {
             render(data);
+            if (type === "cooked") {
+              markCookedDone();
+            }
             status.textContent = announce(type, data);
           }
         })

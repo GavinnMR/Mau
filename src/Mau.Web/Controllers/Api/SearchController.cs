@@ -3,6 +3,7 @@ using Mau.Core.Search;
 using Mau.Core.Users;
 using Mau.Web.Api;
 using Mau.Web.Mapping;
+using Mau.Web.Search;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Mau.Web.Controllers.Api;
@@ -12,11 +13,14 @@ public sealed class SearchController : ApiControllerBase
 {
     private readonly ISearchService _searchService;
     private readonly IPantryService _pantryService;
+    private readonly SearchTokens _searchTokens;
 
-    public SearchController(ISearchService searchService, IPantryService pantryService)
+    public SearchController(
+        ISearchService searchService, IPantryService pantryService, SearchTokens searchTokens)
     {
         _searchService = searchService;
         _pantryService = pantryService;
+        _searchTokens = searchTokens;
     }
 
     [HttpPost]
@@ -33,6 +37,7 @@ public sealed class SearchController : ApiControllerBase
         var result = _searchService.Search(
             new SearchRequest(request.Text, request.ExcludedIds, pantryIds));
 
-        return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }));
+        var searchToken = result.Dishes.Count > 0 ? _searchTokens.Issue() : null;
+        return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }, searchToken));
     }
 }

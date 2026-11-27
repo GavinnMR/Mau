@@ -11,5 +11,8 @@ public class DishFeedback
     public int DishId { get; set; }
     public Dish? Dish { get; set; }
     public FeedbackType Type { get; set; }
+
+    /// <summary>For a cooked event, the search it came from; a user cooks a dish once per search.</summary>
+    public string? SearchKey { get; set; }
     public DateTime CreatedAt { get; set; }
 }

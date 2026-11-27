@@ -16,7 +16,8 @@ public sealed record DishCardDto(
     IReadOnlyList<string> StillNeeded, int MissingCount, double Score);
 
 public sealed record SearchResponseDto(
-    IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied)
+    IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied,
+    string? SearchToken = null)
 {
     public string Status => "ok";
 }
@@ -58,6 +59,10 @@ public sealed class FeedbackRequestDto
         "^(cooked|thumbsUp|thumbsDown)$",
         ErrorMessage = "Type must be cooked, thumbsUp or thumbsDown.")]
     public string? Type { get; set; }
+
+    /// <summary>The search token from the dish link; "cooked" needs it.</summary>
+    [StringLength(500, ErrorMessage = "Search must be at most 500 characters.")]
+    public string? Search { get; set; }
 }
 
 public sealed record FeedbackResponseDto(

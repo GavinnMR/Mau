@@ -31,13 +31,17 @@ public static class DishMapper
             isFavorite,
             feedback);
 
-    public static DishFeedbackViewModel ToFeedbackViewModel(DishTotals totals, UserDishFeedback user) =>
+    public static DishFeedbackViewModel ToFeedbackViewModel(
+        DishTotals totals, UserDishFeedback user,
+        string cookedState = "needs-search", string? searchToken = null) =>
         new(
             totals.CookedCount,
             totals.UpCount,
             totals.DownCount,
             user.CookedCount,
-            user.Vote switch { Vote.Up => "up", Vote.Down => "down", _ => "none" });
+            user.Vote switch { Vote.Up => "up", Vote.Down => "down", _ => "none" },
+            cookedState,
+            searchToken);
 
     public static DishDetailsDto ToDto(CatalogDish dish) =>
         new(
@@ -57,7 +61,8 @@ public static class DishMapper
                 .ToList(),
             dish.Steps);
 
-    public static SearchResponseDto ToDto(SearchResult result, bool pantryApplied) =>
+    public static SearchResponseDto ToDto(
+        SearchResult result, bool pantryApplied, string? searchToken = null) =>
         new(
             result.Tokens
                 .Select(token => new TokenDto(
@@ -78,7 +83,8 @@ public static class DishMapper
                     dish.MissingCount,
                     Math.Round(dish.Score, 4)))
                 .ToList(),
-            pantryApplied);
+            pantryApplied,
+            searchToken);
 
     public static IReadOnlyList<HintDto> ToDto(IEnumerable<IngredientHint> hints) =>
         hints

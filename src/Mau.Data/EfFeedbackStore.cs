@@ -17,19 +17,49 @@ public sealed class EfFeedbackStore : IFeedbackStore
         _timeProvider = timeProvider;
     }
 
-    public async Task<DishTotals> AddCookedAsync(
-        string userId, int dishId, CancellationToken ct = default)
+    public async Task<DishTotals?> AddCookedAsync(
+        string userId, int dishId, string searchKey, CancellationToken ct = default)
     {
+        if (await HasCookedForSearchAsync(userId, dishId, searchKey, ct))
+        {
+            return null;
+        }
+
         await using var context = await _contextFactory.CreateDbContextAsync(ct);
         await using var transaction = await context.Database.BeginTransactionAsync(ct);
 
-        context.DishFeedback.Add(NewRow(userId, dishId, FeedbackType.Cooked));
+        var row = NewRow(userId, dishId, FeedbackType.Cooked);
+        row.SearchKey = searchKey;
+        context.DishFeedback.Add(row);
         var stat = await GetOrAddStatAsync(context, dishId, ct);
         stat.CookedCount++;
 
-        await context.SaveChangesAsync(ct);
+        try
+        {
+            await context.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Two clicks raced; the unique index kept the first one.
+            if (await HasCookedForSearchAsync(userId, dishId, searchKey, ct))
+            {
+                return null;
+            }
+
+            throw;
+        }
+
         await transaction.CommitAsync(ct);
         return ToTotals(stat);
+    }
+
+    public async Task<bool> HasCookedForSearchAsync(
+        string userId, int dishId, string searchKey, CancellationToken ct = default)
+    {
+        await using var context = await _contextFactory.CreateDbContextAsync(ct);
+
+        return await context.DishFeedback.AnyAsync(
+            row => row.UserId == userId && row.DishId == dishId && row.SearchKey == searchKey, ct);
     }
 
     public async Task<DishTotals> SetVoteAsync(

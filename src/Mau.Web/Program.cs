@@ -9,6 +9,7 @@ using Mau.Core.Users;
 using Mau.Data;
 using Mau.Data.Identity;
 using Mau.Web.Api;
+using Mau.Web.Search;
 using Mau.Web.Startup;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
@@ -97,6 +98,7 @@ builder.Services.AddSingleton<ISearchHistoryService, SearchHistoryService>();
 builder.Services.AddSingleton<IFeedbackStore, EfFeedbackStore>();
 builder.Services.AddSingleton<DishStatsCache>();
 builder.Services.AddSingleton<IFeedbackService, FeedbackService>();
+builder.Services.AddSingleton<SearchTokens>();
 
 var app = builder.Build();
 

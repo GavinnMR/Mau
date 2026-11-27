@@ -154,7 +154,10 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(feedback => feedback.DishId)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasIndex(feedback => new { feedback.UserId, feedback.DishId });
+            entity.Property(feedback => feedback.SearchKey).HasMaxLength(32);
+            entity.HasIndex(feedback => new { feedback.UserId, feedback.DishId, feedback.SearchKey })
+                .IsUnique()
+                .HasFilter("\"SearchKey\" IS NOT NULL");
             entity.HasIndex(feedback => feedback.CreatedAt);
         });
 

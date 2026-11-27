@@ -43,8 +43,9 @@ public class RankingApiTests : IClassFixture<MauWebFactory>
             .Single(dish => dish.Name == last.Name).Id;
         for (var i = 0; i < 5; i++)
         {
+            var search = await SearchHelper.GetSearchTokenAsync(client, token);
             using var response = await AuthHelper.SendJsonAsync(
-                client, HttpMethod.Post, "/api/feedback", new { dishId, type = "cooked" }, token);
+                client, HttpMethod.Post, "/api/feedback", new { dishId, type = "cooked", search }, token);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         }
 
