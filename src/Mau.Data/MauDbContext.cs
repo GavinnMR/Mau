@@ -22,6 +22,7 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SearchLogIngredient> SearchLogIngredients => Set<SearchLogIngredient>();
     public DbSet<DishFeedback> DishFeedback => Set<DishFeedback>();
     public DbSet<DishStat> DishStats => Set<DishStat>();
+    public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -163,6 +164,23 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
                 .IsUnique()
                 .HasFilter("\"SearchKey\" IS NOT NULL");
             entity.HasIndex(feedback => feedback.CreatedAt);
+        });
+
+        modelBuilder.Entity<UserPreference>(entity =>
+        {
+            entity.HasKey(preference => preference.UserId);
+            entity.Property(preference => preference.UserId).HasMaxLength(450);
+            entity.Property(preference => preference.PreferredMethod)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            entity.HasOne<ApplicationUser>()
+                .WithOne()
+                .HasForeignKey<UserPreference>(preference => preference.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(preference => preference.PreferredProtein)
+                .WithMany()
+                .HasForeignKey(preference => preference.PreferredProteinId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<DishStat>(entity =>

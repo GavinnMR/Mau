@@ -276,6 +276,29 @@ namespace Mau.Data.Migrations
                     b.ToTable("SearchLogIngredients");
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.UserPreference", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MaxCookTimeMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PreferredMethod")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PreferredProteinId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("PreferredProteinId");
+
+                    b.ToTable("UserPreferences");
+                });
+
             modelBuilder.Entity("Mau.Data.Identity.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -594,6 +617,22 @@ namespace Mau.Data.Migrations
                     b.Navigation("Ingredient");
 
                     b.Navigation("SearchLog");
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.UserPreference", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Ingredient", "PreferredProtein")
+                        .WithMany()
+                        .HasForeignKey("PreferredProteinId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Mau.Data.Identity.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("Mau.Core.Entities.UserPreference", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PreferredProtein");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

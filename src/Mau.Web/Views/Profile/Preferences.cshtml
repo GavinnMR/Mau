@@ -1,0 +1,38 @@
+@using Mau.Core.Entities
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model PreferencesViewModel
+@{
+    ViewData["Title"] = "Your preferences";
+    var proteinOptions = new List<SelectListItem> { new("No preference", "") };
+    proteinOptions.AddRange(Model.ProteinOptions);
+    var methodOptions = new List<SelectListItem> { new("No preference", "") };
+    methodOptions.AddRange(Enum.GetValues<CookingMethod>()
+        .Select(method => new SelectListItem(method.ToString(), method.ToString())));
+}
+
+<h1>Your preferences</h1>
+
+<p>Mau ranks dishes with your preferred protein and cooking method higher. Dishes that take longer than your maximum cooking time are left out of your results. Leave anything you don't mind empty.</p>
+
+<form method="post" class="col-md-6">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="PreferredProteinId" class="form-label"></label>
+        <select asp-for="PreferredProteinId" asp-items="proteinOptions" class="form-select"></select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PreferredMethod" class="form-label"></label>
+        <select asp-for="PreferredMethod" asp-items="methodOptions" class="form-select"></select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaxCookTimeMinutes" class="form-label"></label>
+        <input asp-for="MaxCookTimeMinutes" type="number" min="5" max="600" step="5" class="form-control"
+               aria-describedby="max-time-help" />
+        <div id="max-time-help" class="form-text">For example 30 for weeknight cooking. Empty means no limit.</div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save preferences</button>
+</form>
