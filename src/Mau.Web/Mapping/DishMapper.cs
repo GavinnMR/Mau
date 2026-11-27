@@ -2,6 +2,7 @@ using System.Globalization;
 using Mau.Core.Catalog;
 using Mau.Core.Feedback;
 using Mau.Core.Search;
+using Mau.Core.Users;
 using Mau.Web.Api;
 using Mau.Web.ViewModels;
 
@@ -62,7 +63,8 @@ public static class DishMapper
             dish.Steps);
 
     public static SearchResponseDto ToDto(
-        SearchResult result, bool pantryApplied, string? searchToken = null) =>
+        SearchResult result, bool pantryApplied, string? searchToken = null,
+        UserPreferences? preferences = null) =>
         new(
             result.Tokens
                 .Select(token => new TokenDto(
@@ -81,10 +83,14 @@ public static class DishMapper
                     dish.CookTimeMinutes,
                     dish.StillNeeded,
                     dish.MissingCount,
-                    Math.Round(dish.Score, 4)))
+                    Math.Round(dish.Score, 4),
+                    dish.OverTimeLimit))
                 .ToList(),
             pantryApplied,
-            searchToken);
+            searchToken,
+            preferences is { IsEmpty: false },
+            result.OverTimeLimitCount,
+            preferences?.MaxCookTimeMinutes);
 
     public static IReadOnlyList<HintDto> ToDto(IEnumerable<IngredientHint> hints) =>
         hints

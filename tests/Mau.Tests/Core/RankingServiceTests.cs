@@ -102,6 +102,39 @@ public class RankingServiceTests
     }
 
     [Fact]
+    public void PreferenceMatches_MultiplyByTheBoostEach()
+    {
+        var ranking = Create(new Totals());
+
+        var ranked = ranking.Rank(new[]
+        {
+            Candidate(1, "Both", required: 2, missing: 1, preferenceMatches: 2),
+            Candidate(2, "One", required: 2, missing: 1, preferenceMatches: 1),
+            Candidate(3, "None", required: 2, missing: 0),
+        });
+
+        // Raw: 4 x 0.5 = 2, 2 x 0.5 = 1, 1 x 1 = 1 (same prior for all).
+        Assert.Equal("Both", ranked[0].Name);
+        Assert.Equal(0.5, ranked[0].Score, 9);
+        Assert.Equal(0.25, ranked.Single(match => match.Name == "One").Score, 9);
+        Assert.Equal("None", ranked[1].Name);
+    }
+
+    [Fact]
+    public void PreferenceBoost_ComesFromOptions()
+    {
+        var ranking = new RankingService(new Totals(), new RankingOptions { PreferenceBoost = 3 });
+
+        var ranked = ranking.Rank(new[]
+        {
+            Candidate(1, "Preferred", required: 2, missing: 0, preferenceMatches: 1),
+            Candidate(2, "Other", required: 2, missing: 0),
+        });
+
+        Assert.Equal(0.75, ranked[0].Score, 9);
+    }
+
+    [Fact]
     public void Empty_ReturnsEmpty()
     {
         Assert.Empty(Create(new Totals()).Rank(Array.Empty<RankCandidate>()));
@@ -119,12 +152,13 @@ public class RankingServiceTests
     private static RankingService Create(Totals totals) => new(totals, new RankingOptions());
 
     private static RankCandidate Candidate(
-        int id, string name, int required, int missing, int minutes = 30)
+        int id, string name, int required, int missing, int minutes = 30, int preferenceMatches = 0)
     {
         var stillNeeded = Enumerable.Range(0, missing).Select(i => $"item {i}").ToList();
         return new RankCandidate(
             new DishMatch(id, name, CookingMethod.Braised, minutes, stillNeeded),
-            required);
+            required,
+            preferenceMatches);
     }
 
     private sealed class Totals : Dictionary<int, DishTotals>, IDishTotalsSource

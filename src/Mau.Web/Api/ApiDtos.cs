@@ -13,11 +13,12 @@ public sealed record TokenDto(
 
 public sealed record DishCardDto(
     int Id, string Name, CookingMethod CookingMethod, int CookTimeMinutes,
-    IReadOnlyList<string> StillNeeded, int MissingCount, double Score);
+    IReadOnlyList<string> StillNeeded, int MissingCount, double Score, bool OverTimeLimit = false);
 
 public sealed record SearchResponseDto(
     IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied,
-    string? SearchToken = null)
+    string? SearchToken = null, bool PreferencesApplied = false, int OverTimeLimitCount = 0,
+    int? MaxCookTimeMinutes = null)
 {
     public string Status => "ok";
 }

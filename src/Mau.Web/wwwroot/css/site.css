@@ -81,3 +81,7 @@ body {
   background-color: var(--bs-secondary);
   border-color: var(--bs-secondary);
 }
+
+#result-list .card.over-limit {
+  background-color: var(--bs-tertiary-bg);
+}

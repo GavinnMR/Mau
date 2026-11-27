@@ -14,10 +14,13 @@ public sealed class SearchController : ApiControllerBase
     private readonly ISearchService _searchService;
     private readonly IPantryService _pantryService;
     private readonly SearchTokens _searchTokens;
+    private readonly IPreferenceService _preferenceService;
 
     public SearchController(
-        ISearchService searchService, IPantryService pantryService, SearchTokens searchTokens)
+        ISearchService searchService, IPantryService pantryService, SearchTokens searchTokens,
+        IPreferenceService preferenceService)
     {
+        _preferenceService = preferenceService;
         _searchService = searchService;
         _pantryService = pantryService;
         _searchTokens = searchTokens;
@@ -34,10 +37,12 @@ public sealed class SearchController : ApiControllerBase
             pantryIds = await _pantryService.GetIdsAsync(userId);
         }
 
+        var preferences = userId is null ? null : await _preferenceService.GetAsync(userId);
+
         var result = _searchService.Search(
-            new SearchRequest(request.Text, request.ExcludedIds, pantryIds));
+            new SearchRequest(request.Text, request.ExcludedIds, pantryIds, preferences));
 
         var searchToken = result.Dishes.Count > 0 ? _searchTokens.Issue() : null;
-        return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }, searchToken));
+        return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }, searchToken, preferences));
     }
 }

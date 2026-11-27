@@ -65,7 +65,7 @@
       !pantryCheckbox.disabled;
   }
 
-  function setStatus(mainText, unknownTokens, showRemoveButton, pantryApplied) {
+  function setStatus(mainText, unknownTokens, showRemoveButton, pantryApplied, notes) {
     statusMessage.textContent = "";
 
     var main = document.createElement("p");
@@ -79,6 +79,13 @@
       pantryLine.textContent = "Your pantry is counted as ingredients you already have.";
       statusMessage.appendChild(pantryLine);
     }
+
+    (notes || []).forEach(function (note) {
+      var noteLine = document.createElement("p");
+      noteLine.className = "mb-1";
+      noteLine.textContent = note;
+      statusMessage.appendChild(noteLine);
+    });
 
     if (showRemoveButton) {
       var removeButton = document.createElement("button");
@@ -169,12 +176,21 @@
     });
   }
 
-  function renderDishes(dishes, searchToken) {
+  function renderDishes(dishes, searchToken, maxMinutes) {
     resultList.textContent = "";
+    var shownLimitHeading = false;
 
     dishes.forEach(function (dish) {
+      if (dish.overTimeLimit === true && !shownLimitHeading) {
+        shownLimitHeading = true;
+        var heading = document.createElement("h2");
+        heading.className = "h6 text-muted mt-4 mb-2 over-limit-heading";
+        heading.textContent = "Takes longer than your " + maxMinutes + "-minute limit";
+        resultList.appendChild(heading);
+      }
+
       var card = document.createElement("div");
-      card.className = "card mb-2";
+      card.className = dish.overTimeLimit === true ? "card mb-2 over-limit" : "card mb-2";
 
       var body = document.createElement("div");
       body.className = "card-body";
@@ -226,9 +242,24 @@
     });
 
     renderChips(tokens);
-    renderDishes(dishes, typeof data.searchToken === "string" ? data.searchToken : null);
+    renderDishes(
+      dishes,
+      typeof data.searchToken === "string" ? data.searchToken : null,
+      data.maxCookTimeMinutes);
 
     var pantryApplied = data.pantryApplied === true;
+    var overLimit = typeof data.overTimeLimitCount === "number" ? data.overTimeLimitCount : 0;
+    var notes = [];
+
+    if (data.preferencesApplied === true && dishes.length > 1) {
+      notes.push("Ranked using your preferences.");
+    }
+    if (overLimit > 0 && overLimit === dishes.length) {
+      notes.push("None fit your " + data.maxCookTimeMinutes + "-minute limit, but you can still pick one.");
+    } else if (overLimit > 0) {
+      notes.push((overLimit === 1 ? "1 dish takes" : overLimit + " dishes take") +
+        " longer than your " + data.maxCookTimeMinutes + "-minute limit; shown last.");
+    }
 
     if (!hasUsableIngredient) {
       setStatus(
@@ -237,13 +268,14 @@
     } else if (dishes.length === 0) {
       setStatus(
         "No dish contains all of these ingredients.",
-        unknownTokens, true, pantryApplied);
+        unknownTokens, true, pantryApplied, notes);
     } else {
       setStatus(
         dishes.length + (dishes.length === 1 ? " dish found." : " dishes found."),
         unknownTokens,
         false,
-        pantryApplied);
+        pantryApplied,
+        notes);
     }
   }
 

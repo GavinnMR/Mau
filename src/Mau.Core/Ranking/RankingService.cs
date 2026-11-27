@@ -4,7 +4,7 @@ using Mau.Core.Search;
 namespace Mau.Core.Ranking;
 
 /// <summary>
-/// Scores each dish as popularity prior × fit, then scales the scores to add up to 1.
+/// Scores each dish as popularity prior × preference boost × fit, then scales the scores to add up to 1.
 /// Ties go to fewer missing ingredients, then shorter cooking time, then name.
 /// </summary>
 public sealed class RankingService : IRankingService
@@ -34,7 +34,8 @@ public sealed class RankingService : IRankingService
         for (var i = 0; i < candidates.Count; i++)
         {
             var prior = (points[i] + 1) / (totalPoints + candidates.Count);
-            raw[i] = prior * Fit(candidates[i]);
+            var boost = Math.Pow(_options.PreferenceBoost, candidates[i].PreferenceMatches);
+            raw[i] = prior * boost * Fit(candidates[i]);
         }
 
         var sum = raw.Sum();

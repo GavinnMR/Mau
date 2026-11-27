@@ -2,6 +2,7 @@ using Mau.Core.Catalog;
 using Mau.Core.Engine;
 using Mau.Core.Feedback;
 using Mau.Core.Ranking;
+using Mau.Core.Users;
 
 namespace Mau.Core.Search;
 
@@ -71,6 +72,8 @@ public sealed class SearchService : ISearchService
         }
 
         var toRank = new List<RankCandidate>();
+        var preferences = request.Preferences ?? UserPreferences.None;
+
         foreach (var dishId in candidates)
         {
             var dish = snapshot.DishesById[dishId];
@@ -90,11 +93,21 @@ public sealed class SearchService : ISearchService
                 dish.Name,
                 dish.CookingMethod,
                 dish.CookTimeMinutes,
-                stillNeeded);
-            toRank.Add(new RankCandidate(match, dish.Ingredients.Count(row => !row.IsOptional)));
+                stillNeeded,
+                OverTimeLimit: dish.CookTimeMinutes > preferences.MaxCookTimeMinutes);
+            var preferenceMatches =
+                (preferences.PreferredProteinId is int proteinId && dish.MainProteinId == proteinId ? 1 : 0) +
+                (dish.CookingMethod == preferences.PreferredMethod ? 1 : 0);
+            toRank.Add(new RankCandidate(
+                match, dish.Ingredients.Count(row => !row.IsOptional), preferenceMatches));
         }
 
-        return new SearchResult(tokens, _ranking.Rank(toRank));
+        // Dishes over the time limit stay visible, but only after every dish within it.
+        var ranked = _ranking.Rank(toRank)
+            .OrderBy(match => match.OverTimeLimit)
+            .ToList();
+
+        return new SearchResult(tokens, ranked, ranked.Count(match => match.OverTimeLimit));
     }
 
     public IReadOnlyList<IngredientHint> GetHints(string? prefix)

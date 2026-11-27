@@ -1,3 +1,5 @@
+using Mau.Core.Users;
+using Mau.Core.Entities;
 using Mau.Core.Catalog;
 using Mau.Core.Search;
 using Mau.Tests.Support;
@@ -197,6 +199,66 @@ public class SearchServiceTests
         var dish = service.GetDish(999);
 
         Assert.Null(dish);
+    }
+
+    [Fact]
+    public async Task Search_PreferredMethodSoup_MovesTinolaToTheTop()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest(
+            "chicken,", null, Preferences: new UserPreferences(null, CookingMethod.Soup, null)));
+
+        Assert.Equal("Chicken tinola", result.Dishes[0].Name);
+        Assert.Equal(0, result.OverTimeLimitCount);
+    }
+
+    [Fact]
+    public async Task Search_PreferredProteinPork_LiftsPorkAdoboAboveChickenAdobo()
+    {
+        var service = await CreateServiceAsync();
+
+        var plain = service.Search(new SearchRequest("garlic,", null));
+        var preferred = service.Search(new SearchRequest(
+            "garlic,", null, Preferences: new UserPreferences(2, null, null)));
+
+        Assert.True(
+            plain.Dishes.ToList().FindIndex(dish => dish.Name == "Pork adobo") >
+            plain.Dishes.ToList().FindIndex(dish => dish.Name == "Chicken adobo"));
+        Assert.True(
+            preferred.Dishes.ToList().FindIndex(dish => dish.Name == "Pork adobo") <
+            preferred.Dishes.ToList().FindIndex(dish => dish.Name == "Chicken adobo"));
+    }
+
+    [Fact]
+    public async Task Search_MaxCookTime_KeepsLongerDishesButShowsThemLast()
+    {
+        var service = await CreateServiceAsync();
+
+        // With soy sauce and vinegar in the pantry, chicken adobo (45 min) would rank first.
+        var result = service.Search(new SearchRequest(
+            "chicken,", null, new[] { 3, 4 }, new UserPreferences(null, null, 40)));
+
+        Assert.Equal(
+            new[] { "Garlic fried chicken", "Chicken tinola", "Chicken adobo" },
+            result.Dishes.Select(dish => dish.Name));
+        Assert.True(result.Dishes[^1].OverTimeLimit);
+        Assert.False(result.Dishes[0].OverTimeLimit);
+        Assert.Equal(1, result.OverTimeLimitCount);
+        Assert.Equal(1.0, result.Dishes.Sum(dish => dish.Score), 9);
+    }
+
+    [Fact]
+    public async Task Search_MaxCookTime_AllOverLimit_StillReturnsThem()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest(
+            "chicken,", null, Preferences: new UserPreferences(null, null, 10)));
+
+        Assert.Equal(3, result.Dishes.Count);
+        Assert.Equal(3, result.OverTimeLimitCount);
+        Assert.Equal("Garlic fried chicken", result.Dishes[0].Name);
     }
 
     [Fact]

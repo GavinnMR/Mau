@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using Mau.Core.Catalog;
 using Mau.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
@@ -99,4 +100,80 @@ public class PreferencesPageTests : IClassFixture<MauWebFactory>
                 new KeyValuePair<string, string>("MaxCookTimeMinutes", minutes),
             },
             token);
+}
+
+public class PreferencesSearchTests : IClassFixture<MauWebFactory>
+{
+    private readonly MauWebFactory _factory;
+
+    public PreferencesSearchTests(MauWebFactory factory)
+    {
+        _factory = factory;
+    }
+
+    [Fact]
+    public async Task LoggedInWithPreferences_SearchAppliesThem()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        using (var save = await AuthHelper.PostFormAsync(
+            client,
+            "/Profile/Preferences",
+            new[]
+            {
+                new KeyValuePair<string, string>("PreferredProteinId", ""),
+                new KeyValuePair<string, string>("PreferredMethod", "Soup"),
+                new KeyValuePair<string, string>("MaxCookTimeMinutes", "45"),
+            },
+            token))
+        {
+            Assert.Equal(HttpStatusCode.Redirect, save.StatusCode);
+        }
+
+        using var guestClient = AuthHelper.CreateClient(_factory);
+        var guestToken = await AuthHelper.GetCsrfTokenAsync(guestClient);
+        using var guest = await SearchAsync(guestClient, guestToken);
+        using var json = await SearchAsync(client, token);
+
+        var root = json.RootElement;
+        Assert.True(root.GetProperty("preferencesApplied").GetBoolean());
+        Assert.Equal(45, root.GetProperty("maxCookTimeMinutes").GetInt32());
+        Assert.Equal(1, root.GetProperty("overTimeLimitCount").GetInt32());
+        var dishes = root.GetProperty("dishes").EnumerateArray().ToList();
+        var last = dishes[^1];
+        Assert.Equal("Chicken afritada", last.GetProperty("name").GetString());
+        Assert.True(last.GetProperty("overTimeLimit").GetBoolean());
+        Assert.All(dishes.SkipLast(1), dish => Assert.False(dish.GetProperty("overTimeLimit").GetBoolean()));
+
+        // The Soup preference doubles tinola's score relative to a non-soup dish.
+        var guestRatio = Score(guest, "Chicken tinola") / Score(guest, "Garlic fried chicken");
+        var userRatio = Score(json, "Chicken tinola") / Score(json, "Garlic fried chicken");
+        Assert.Equal(2 * guestRatio, userRatio, 2);
+    }
+
+    private static double Score(JsonDocument json, string name) =>
+        json.RootElement.GetProperty("dishes").EnumerateArray()
+            .Single(dish => dish.GetProperty("name").GetString() == name)
+            .GetProperty("score").GetDouble();
+
+    [Fact]
+    public async Task Guest_SearchHasNoPreferences()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+
+        using var json = await SearchAsync(client, token);
+
+        Assert.False(json.RootElement.GetProperty("preferencesApplied").GetBoolean());
+        Assert.Equal(0, json.RootElement.GetProperty("overTimeLimitCount").GetInt32());
+    }
+
+    private static async Task<JsonDocument> SearchAsync(HttpClient client, string token)
+    {
+        using var response = await AuthHelper.SendJsonAsync(
+            client, HttpMethod.Post, "/api/search", new { text = "chicken," }, token);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+    }
 }
