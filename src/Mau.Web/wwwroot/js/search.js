@@ -107,10 +107,52 @@
 
     (unknownTokens || []).forEach(function (token) {
       var line = document.createElement("p");
-      line.className = "mb-1";
+      line.className = "mb-1 unknown-word";
       line.textContent = "\u201C" + token.raw + "\u201D isn\u2019t a known ingredient yet.";
+
+      var suggestions = Array.isArray(token.suggestions) ? token.suggestions : [];
+      if (suggestions.length > 0) {
+        line.appendChild(document.createTextNode(" Did you mean "));
+        suggestions.forEach(function (suggestion, i) {
+          if (i > 0) {
+            line.appendChild(document.createTextNode(i === suggestions.length - 1 ? " or " : ", "));
+          }
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "btn btn-link p-0 align-baseline suggestion-button";
+          button.textContent = suggestion;
+          button.setAttribute("aria-label", "Use " + suggestion + " instead of " + token.raw);
+          button.addEventListener("click", function () {
+            acceptSuggestion(token.index, suggestion);
+          });
+          line.appendChild(button);
+        });
+        line.appendChild(document.createTextNode("?"));
+      }
+
       statusMessage.appendChild(line);
     });
+  }
+
+  // Replaces the misspelled word with the chosen name (UC4). Nothing changes until the user clicks.
+  function acceptSuggestion(index, suggestion) {
+    if (index < 0 || index >= committed.length) {
+      return;
+    }
+
+    var key = normalizeKey(suggestion);
+    var alreadyThere = committed.some(function (entry, i) {
+      return i !== index && normalizeKey(entry) === key;
+    });
+
+    if (alreadyThere) {
+      committed.splice(index, 1);
+    } else {
+      committed[index] = suggestion;
+    }
+
+    runSearch();
+    input.focus();
   }
 
   function renderChips(tokens) {
