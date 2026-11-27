@@ -1,3 +1,4 @@
+using Mau.Core.Entities;
 using Mau.Core.Catalog;
 using Mau.Core.Engine;
 
@@ -323,6 +324,22 @@ public sealed class CatalogAdminService : ICatalogAdminService
             }
         }
 
+        if (input.MainProteinId is int proteinId)
+        {
+            if (!snapshot.IngredientsById.TryGetValue(proteinId, out var protein) ||
+                protein.Category != IngredientCategory.Protein)
+            {
+                errors.Add(new ValidationError(
+                    "MainProteinId", "Choose a protein for the main protein."));
+            }
+            else if (!chosenRows.Any(row => row.IngredientId == proteinId))
+            {
+                errors.Add(new ValidationError(
+                    "MainProteinId",
+                    $"Add {protein.CanonicalName} to the ingredients or choose another main protein."));
+            }
+        }
+
         return errors;
     }
 
@@ -350,7 +367,8 @@ public sealed class CatalogAdminService : ICatalogAdminService
             input.CookingMethod,
             input.CookTimeMinutes,
             CleanSteps(input.Steps),
-            rows);
+            rows,
+            input.MainProteinId);
     }
 
     private static List<string> CleanSteps(IReadOnlyList<string> steps)

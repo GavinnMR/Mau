@@ -44,7 +44,7 @@
     {
       "name": "Chicken adobo",
       "description": "Chicken simmered in soy sauce, vinegar and garlic until the sauce turns glossy and savory-sour.",
-      "cookingMethod": "Braised", "cookTimeMinutes": 45,
+      "cookingMethod": "Braised", "cookTimeMinutes": 45, "mainProtein": "chicken",
       "steps": [
         "Put the chicken, soy sauce, vinegar, garlic, pepper and bay leaf in a pot. Let it sit for 15 minutes if you have time.",
         "Add the water and bring to a boil without stirring, so the vinegar mellows.",
@@ -65,7 +65,7 @@
     {
       "name": "Pork adobo",
       "description": "Pork cooked low and slow in soy sauce, vinegar and garlic until tender, with a rich reduced sauce.",
-      "cookingMethod": "Braised", "cookTimeMinutes": 60,
+      "cookingMethod": "Braised", "cookTimeMinutes": 60, "mainProtein": "pork",
       "steps": [
         "Combine the pork, soy sauce, vinegar, garlic, pepper and bay leaf in a pot.",
         "Add the water and bring to a boil without stirring.",
@@ -86,7 +86,7 @@
     {
       "name": "Chicken tinola",
       "description": "A light ginger-scented chicken soup with green papaya and chili leaves.",
-      "cookingMethod": "Soup", "cookTimeMinutes": 40,
+      "cookingMethod": "Soup", "cookTimeMinutes": 40, "mainProtein": "chicken",
       "steps": [
         "Heat the oil and cook the garlic, onion and ginger until fragrant.",
         "Add the chicken and fish sauce and cook for about 5 minutes.",
@@ -110,7 +110,7 @@
     {
       "name": "Pork sinigang",
       "description": "A sour tamarind soup with tender pork and plenty of vegetables.",
-      "cookingMethod": "Soup", "cookTimeMinutes": 75,
+      "cookingMethod": "Soup", "cookTimeMinutes": 75, "mainProtein": "pork",
       "steps": [
         "Boil the pork in the water and skim off the foam. Simmer about 45 minutes until tender.",
         "Add the onion, tomato and tamarind and simmer 10 minutes.",
@@ -134,7 +134,7 @@
     {
       "name": "Beef bistek",
       "description": "Thin beef slices in a soy sauce and calamansi marinade, simmered and topped with onion rings.",
-      "cookingMethod": "Sauteed", "cookTimeMinutes": 40,
+      "cookingMethod": "Sauteed", "cookTimeMinutes": 40, "mainProtein": "beef",
       "steps": [
         "Mix the beef with the soy sauce, calamansi juice and pepper. Let it sit while you slice the onions into rings.",
         "Heat the oil and sear the beef in batches.",
@@ -154,7 +154,7 @@
     {
       "name": "Chicken afritada",
       "description": "Chicken and vegetables stewed in a tomato sauce.",
-      "cookingMethod": "Stewed", "cookTimeMinutes": 50,
+      "cookingMethod": "Stewed", "cookTimeMinutes": 50, "mainProtein": "chicken",
       "steps": [
         "Heat the oil and cook the garlic and onion. Add the chicken and brown lightly.",
         "Add the fish sauce, tomato sauce, water and bay leaf. Simmer 20 minutes.",
@@ -178,7 +178,7 @@
     {
       "name": "Beef nilaga",
       "description": "A clear beef soup with potatoes and leafy vegetables.",
-      "cookingMethod": "Soup", "cookTimeMinutes": 120,
+      "cookingMethod": "Soup", "cookTimeMinutes": 120, "mainProtein": "beef",
       "steps": [
         "Boil the beef in the water with the onion and pepper. Skim the foam.",
         "Simmer about 90 minutes until the beef is tender.",
@@ -200,7 +200,7 @@
     {
       "name": "Pork menudo",
       "description": "Diced pork and vegetables stewed in tomato sauce with a splash of soy sauce.",
-      "cookingMethod": "Stewed", "cookTimeMinutes": 60,
+      "cookingMethod": "Stewed", "cookTimeMinutes": 60, "mainProtein": "pork",
       "steps": [
         "Heat the oil and cook the garlic and onion. Add the pork and brown it.",
         "Add the soy sauce, tomato sauce and water. Simmer about 30 minutes until the pork is tender.",
@@ -224,7 +224,7 @@
     {
       "name": "Tortang talong",
       "description": "Roasted eggplant dipped in beaten egg and pan-fried into a savory omelet.",
-      "cookingMethod": "Fried", "cookTimeMinutes": 20,
+      "cookingMethod": "Fried", "cookTimeMinutes": 20, "mainProtein": "egg",
       "steps": [
         "Roast the eggplants over a flame or in an oven until the skin chars and the flesh is soft.",
         "Peel off the skin, keep the stem, and gently flatten each eggplant with a fork.",
@@ -241,7 +241,7 @@
     {
       "name": "Pritong isda",
       "description": "Simple fried fish, crisp outside and tender inside, served with a vinegar and garlic dip.",
-      "cookingMethod": "Fried", "cookTimeMinutes": 25,
+      "cookingMethod": "Fried", "cookTimeMinutes": 25, "mainProtein": "fish",
       "steps": [
         "Pat the fish dry and rub it with salt.",
         "Heat the oil until shimmering and fry the fish about 5 minutes per side until golden.",
@@ -258,7 +258,7 @@
     {
       "name": "Kare-kare",
       "description": "Beef and vegetables in a thick peanut sauce colored with annatto, traditionally eaten with shrimp paste.",
-      "cookingMethod": "Stewed", "cookTimeMinutes": 150,
+      "cookingMethod": "Stewed", "cookTimeMinutes": 150, "mainProtein": "beef",
       "steps": [
         "Boil the beef in the water until very tender, about 2 hours. Keep the broth.",
         "In another pot, cook the garlic and onion in oil. Stir in the annatto.",
@@ -284,7 +284,7 @@
     {
       "name": "Ginataang kalabasa at sitaw",
       "description": "Squash, string beans and shrimp simmered in coconut milk.",
-      "cookingMethod": "Stewed", "cookTimeMinutes": 30,
+      "cookingMethod": "Stewed", "cookTimeMinutes": 30, "mainProtein": "shrimp",
       "steps": [
         "Bring the water, coconut milk, garlic and onion to a gentle boil.",
         "Add the squash and cook about 10 minutes until it starts to soften.",
@@ -327,7 +327,7 @@
     {
       "name": "Garlic fried chicken",
       "description": "Chicken pieces fried until crisp, topped with plenty of crunchy garlic.",
-      "cookingMethod": "Fried", "cookTimeMinutes": 40,
+      "cookingMethod": "Fried", "cookTimeMinutes": 40, "mainProtein": "chicken",
       "steps": [
         "Season the chicken with salt and pepper.",
         "Fry in hot oil, turning occasionally, about 20 minutes until golden and cooked through. Drain.",

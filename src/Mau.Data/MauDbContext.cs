@@ -71,6 +71,10 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(dish => dish.Steps)
                 .IsRequired()
                 .HasMaxLength(4000);
+            entity.HasOne(dish => dish.MainProtein)
+                .WithMany()
+                .HasForeignKey(dish => dish.MainProteinId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<DishIngredient>(entity =>

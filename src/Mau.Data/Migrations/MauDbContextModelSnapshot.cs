@@ -36,6 +36,9 @@ namespace Mau.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("MainProteinId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -48,6 +51,8 @@ namespace Mau.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MainProteinId");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -461,6 +466,16 @@ namespace Mau.Data.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.Dish", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Ingredient", "MainProtein")
+                        .WithMany()
+                        .HasForeignKey("MainProteinId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("MainProtein");
                 });
 
             modelBuilder.Entity("Mau.Core.Entities.DishFeedback", b =>

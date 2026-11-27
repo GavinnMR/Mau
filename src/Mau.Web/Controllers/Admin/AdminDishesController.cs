@@ -29,6 +29,7 @@ public sealed class AdminDishesController : AdminControllerBase
         var form = new DishFormViewModel();
         AdminMapper.PadDishRows(form, 8);
         form.IngredientOptions = AdminMapper.IngredientOptions(_catalog.Current);
+        form.ProteinOptions = AdminMapper.ProteinOptions(_catalog.Current);
         return View("Form", form);
     }
 
@@ -42,6 +43,7 @@ public sealed class AdminDishesController : AdminControllerBase
             AdminMapper.AddErrors(ModelState, result);
             AdminMapper.PadDishRows(form, 3);
             form.IngredientOptions = AdminMapper.IngredientOptions(_catalog.Current);
+            form.ProteinOptions = AdminMapper.ProteinOptions(_catalog.Current);
             return View("Form", form);
         }
 
@@ -61,6 +63,7 @@ public sealed class AdminDishesController : AdminControllerBase
 
         var form = AdminMapper.FromDish(dish);
         form.IngredientOptions = AdminMapper.IngredientOptions(_catalog.Current);
+        form.ProteinOptions = AdminMapper.ProteinOptions(_catalog.Current);
         return View("Form", form);
     }
 
@@ -82,6 +85,7 @@ public sealed class AdminDishesController : AdminControllerBase
             AdminMapper.AddErrors(ModelState, result);
             AdminMapper.PadDishRows(form, 3);
             form.IngredientOptions = AdminMapper.IngredientOptions(_catalog.Current);
+            form.ProteinOptions = AdminMapper.ProteinOptions(_catalog.Current);
             return View("Form", form);
         }
 

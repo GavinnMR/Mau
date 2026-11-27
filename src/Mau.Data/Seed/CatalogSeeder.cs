@@ -86,6 +86,7 @@ public static class CatalogSeeder
         foreach (var seedDish in seedDishes)
         {
             var rows = new List<DishIngredient>();
+            Ingredient? firstProtein = null;
             for (var position = 0; position < seedDish.Ingredients.Count; position++)
             {
                 var row = seedDish.Ingredients[position];
@@ -93,6 +94,11 @@ public static class CatalogSeeder
                 {
                     throw new InvalidOperationException(
                         $"Dish '{seedDish.Name}' references unknown ingredient '{row.Name}'.");
+                }
+
+                if (ingredient.Category == IngredientCategory.Protein && !row.IsOptional)
+                {
+                    firstProtein ??= ingredient;
                 }
 
                 rows.Add(new DishIngredient
@@ -105,9 +111,23 @@ public static class CatalogSeeder
                 });
             }
 
+            var mainProtein = firstProtein;
+            if (seedDish.MainProtein is not null)
+            {
+                if (!ingredients.TryGetValue(seedDish.MainProtein, out mainProtein) ||
+                    mainProtein.Category != IngredientCategory.Protein ||
+                    rows.All(row => row.IngredientId != mainProtein.Id))
+                {
+                    throw new InvalidOperationException(
+                        $"Dish '{seedDish.Name}' has main protein '{seedDish.MainProtein}', " +
+                        "which is not one of its protein ingredients.");
+                }
+            }
+
             dishes.Add(new Dish
             {
                 Name = seedDish.Name,
+                MainProteinId = mainProtein?.Id,
                 Description = seedDish.Description,
                 CookingMethod = seedDish.CookingMethod,
                 CookTimeMinutes = seedDish.CookTimeMinutes,

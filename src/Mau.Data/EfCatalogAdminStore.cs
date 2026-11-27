@@ -119,6 +119,7 @@ public sealed class EfCatalogAdminStore : ICatalogAdminStore
             Name = input.Name!,
             Description = input.Description!,
             CookingMethod = input.CookingMethod,
+            MainProteinId = input.MainProteinId,
             CookTimeMinutes = input.CookTimeMinutes,
             Steps = string.Join("\n", input.Steps),
             Ingredients = input.Ingredients
@@ -158,6 +159,7 @@ public sealed class EfCatalogAdminStore : ICatalogAdminStore
         dish.Name = input.Name!;
         dish.Description = input.Description!;
         dish.CookingMethod = input.CookingMethod;
+        dish.MainProteinId = input.MainProteinId;
         dish.CookTimeMinutes = input.CookTimeMinutes;
         dish.Steps = string.Join("\n", input.Steps);
 

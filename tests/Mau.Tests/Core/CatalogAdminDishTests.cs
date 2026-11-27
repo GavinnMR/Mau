@@ -445,6 +445,50 @@ public class CatalogAdminDishTests
         AssertNoReload(loader);
     }
 
+    [Fact]
+    public async Task Create_WithMainProteinInIngredients_KeepsIt()
+    {
+        var (service, store, _) = await CreateAsync();
+
+        var result = await service.CreateDishAsync(ValidDish() with { MainProteinId = 1 });
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(1, Assert.Single(store.Calls).DishInput!.MainProteinId);
+    }
+
+    [Fact]
+    public async Task Create_MainProteinNotAProtein_IsRejected()
+    {
+        var (service, _, loader) = await CreateAsync();
+
+        var result = await service.CreateDishAsync(ValidDish() with { MainProteinId = 5 });
+
+        AssertError(result, "MainProteinId", "Choose a protein for the main protein.");
+        AssertNoReload(loader);
+    }
+
+    [Fact]
+    public async Task Create_MainProteinNotInIngredients_IsRejected()
+    {
+        var (service, _, loader) = await CreateAsync();
+
+        var result = await service.CreateDishAsync(ValidDish() with { MainProteinId = 2 });
+
+        AssertError(
+            result, "MainProteinId", "Add pork to the ingredients or choose another main protein.");
+        AssertNoReload(loader);
+    }
+
+    [Fact]
+    public async Task Create_UnknownMainProtein_IsRejected()
+    {
+        var (service, _, _) = await CreateAsync();
+
+        var result = await service.CreateDishAsync(ValidDish() with { MainProteinId = 999 });
+
+        AssertError(result, "MainProteinId", "Choose a protein for the main protein.");
+    }
+
     private static DishInput ValidDish() => new(
         "Sinigang na hipon",
         "Shrimp in tamarind soup.",

@@ -461,6 +461,43 @@ public class AdminDishFormTests : IClassFixture<MauWebFactory>
         return (userId, _factory.Services.GetRequiredService<IFavoriteStore>());
     }
 
+    [Fact]
+    public async Task Create_WithMainProtein_SavesItAndEditFormShowsIt()
+    {
+        using var client = await CreateAdminClientAsync();
+        var name = Unique("dish");
+        var chickenId = IngredientId("chicken");
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var fields = DishFields(name, rows: new Row(chickenId.ToString(), "1", "kg"));
+        fields.Add(new("MainProteinId", chickenId.ToString()));
+
+        using var response = await AuthHelper.PostFormAsync(
+            client, "/Admin/Dishes/Create", fields, token);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var dish = GetCatalog().Dishes.Single(item => item.Name == name);
+        Assert.Equal(chickenId, dish.MainProteinId);
+
+        using var edit = await client.GetAsync($"/Admin/Dishes/Edit/{dish.Id}");
+        var html = await edit.Content.ReadAsStringAsync();
+        Assert.Matches($"<option selected=\"selected\" value=\"{chickenId}\">chicken</option>", html);
+    }
+
+    [Fact]
+    public async Task CreateForm_MainProteinListsOnlyProteins()
+    {
+        using var client = await CreateAdminClientAsync();
+
+        using var response = await client.GetAsync("/Admin/Dishes/Create");
+        var html = await response.Content.ReadAsStringAsync();
+
+        var select = html[html.IndexOf("name=\"MainProteinId\"", StringComparison.Ordinal)..];
+        select = select[..select.IndexOf("</select>", StringComparison.Ordinal)];
+        Assert.Contains(">chicken</option>", select);
+        Assert.Contains("<option value=\"\">", select);
+        Assert.DoesNotContain(">garlic</option>", select);
+    }
+
     private static List<KeyValuePair<string, string>> DishFields(
         string name,
         string description = "Description.",

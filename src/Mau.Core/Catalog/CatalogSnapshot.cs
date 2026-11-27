@@ -133,6 +133,7 @@ public sealed class CatalogSnapshot
             dish.CookingMethod,
             dish.CookTimeMinutes,
             steps,
-            rows);
+            rows,
+            dish.MainProteinId);
     }
 }
