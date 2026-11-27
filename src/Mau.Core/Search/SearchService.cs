@@ -39,6 +39,13 @@ public sealed class SearchService : ISearchService
             .Select(token => token.IngredientId!.Value)
             .ToHashSet();
 
+        // A never-list ingredient the user typed on purpose counts for this search.
+        var neverIds = (request.NeverIds ?? Array.Empty<int>()).ToHashSet();
+        var neverOverridden = neverIds.Where(includeIds.Contains).ToList();
+        neverIds.ExceptWith(includeIds);
+        var neverHidden = 0;
+        var neverBlocking = new HashSet<int>();
+
         if (includeIds.Count == 0)
         {
             return new SearchResult(tokens, Array.Empty<DishMatch>());
@@ -82,6 +89,18 @@ public sealed class SearchService : ISearchService
                 continue;
             }
 
+            // Optional ingredients can be left out, so only required ones hide a dish.
+            var blocking = dish.Ingredients
+                .Where(row => !row.IsOptional && neverIds.Contains(row.IngredientId))
+                .Select(row => row.IngredientId)
+                .ToList();
+            if (blocking.Count > 0)
+            {
+                neverHidden++;
+                neverBlocking.UnionWith(blocking);
+                continue;
+            }
+
             var stillNeeded = dish.Ingredients
                 .Where(row => !row.IsOptional && !row.IsStaple && !includeIds.Contains(row.IngredientId)
                     && !pantryIds.Contains(row.IngredientId))
@@ -107,8 +126,18 @@ public sealed class SearchService : ISearchService
             .OrderBy(match => match.OverTimeLimit)
             .ToList();
 
-        return new SearchResult(tokens, ranked, ranked.Count(match => match.OverTimeLimit));
+        return new SearchResult(tokens, ranked, ranked.Count(match => match.OverTimeLimit))
+        {
+            NeverListHiddenCount = neverHidden,
+            NeverListBlocking = NamesOf(snapshot, neverBlocking),
+            NeverListOverridden = NamesOf(snapshot, neverOverridden),
+        };
     }
+
+    private static IReadOnlyList<string> NamesOf(CatalogSnapshot snapshot, IEnumerable<int> ids) =>
+        ids.Select(id => snapshot.IngredientsById[id].CanonicalName)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     public IReadOnlyList<IngredientHint> GetHints(string? prefix)
     {

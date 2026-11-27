@@ -20,6 +20,12 @@ public sealed record SearchResponseDto(
     string? SearchToken = null, bool PreferencesApplied = false, int OverTimeLimitCount = 0,
     int? MaxCookTimeMinutes = null)
 {
+    public int NeverListHiddenCount { get; init; }
+
+    public IReadOnlyList<string> NeverListBlocking { get; init; } = [];
+
+    public IReadOnlyList<string> NeverListOverridden { get; init; } = [];
+
     public string Status => "ok";
 }
 

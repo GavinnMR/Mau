@@ -3,10 +3,13 @@ using Mau.Core.Users;
 
 namespace Mau.Core.Search;
 
-/// <summary>The typed text, the ingredient ids the user left out, the pantry ids and preferences.</summary>
+/// <summary>
+/// The typed text, the ingredient ids the user left out, the pantry ids, the preferences and the
+/// ingredients the user never wants.
+/// </summary>
 public sealed record SearchRequest(
     string? Text, IReadOnlyCollection<int>? ExcludedIds, IReadOnlyCollection<int>? PantryIds = null,
-    UserPreferences? Preferences = null);
+    UserPreferences? Preferences = null, IReadOnlyCollection<int>? NeverIds = null);
 
 /// <summary>One committed token as shown to the user.</summary>
 public sealed record SearchToken(int Index, string Raw, int? IngredientId, string? IngredientName, bool IsExcluded);
@@ -22,10 +25,19 @@ public sealed record DishMatch(
 /// <summary>The tokens and matching dishes for one search.</summary>
 /// <remarks>
 /// Dishes longer than the user's maximum cooking time stay in the list, after all the others;
-/// OverTimeLimitCount says how many there are.
+/// OverTimeLimitCount says how many there are. Dishes that need an ingredient on the user's
+/// never list are left out: NeverListHiddenCount says how many, NeverListBlocking which of
+/// those ingredients caused it, and NeverListOverridden which of them the user typed anyway.
 /// </remarks>
 public sealed record SearchResult(
-    IReadOnlyList<SearchToken> Tokens, IReadOnlyList<DishMatch> Dishes, int OverTimeLimitCount = 0);
+    IReadOnlyList<SearchToken> Tokens, IReadOnlyList<DishMatch> Dishes, int OverTimeLimitCount = 0)
+{
+    public int NeverListHiddenCount { get; init; }
+
+    public IReadOnlyList<string> NeverListBlocking { get; init; } = [];
+
+    public IReadOnlyList<string> NeverListOverridden { get; init; } = [];
+}
 
 /// <summary>A hint for the word currently being typed.</summary>
 public sealed record IngredientHint(string Text, int IngredientId, string IngredientName);

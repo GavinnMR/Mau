@@ -158,6 +158,44 @@ public class PreferencesSearchTests : IClassFixture<MauWebFactory>
             .GetProperty("score").GetDouble();
 
     [Fact]
+    public async Task LoggedInWithNeverList_SearchHidesDishesAndPageShowsTicks()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var vinegarId = _factory.Services.GetRequiredService<Mau.Core.Catalog.CatalogStore>()
+            .Current.Ingredients.Single(ingredient => ingredient.CanonicalName == "vinegar").Id;
+        using (var save = await AuthHelper.PostFormAsync(
+            client,
+            "/Profile/Preferences",
+            new[]
+            {
+                new KeyValuePair<string, string>("PreferredProteinId", ""),
+                new KeyValuePair<string, string>("PreferredMethod", ""),
+                new KeyValuePair<string, string>("MaxCookTimeMinutes", ""),
+                new KeyValuePair<string, string>("NeverIds", vinegarId.ToString()),
+            },
+            token))
+        {
+            Assert.Equal(HttpStatusCode.Redirect, save.StatusCode);
+        }
+
+        using var json = await SearchAsync(client, token);
+
+        var root = json.RootElement;
+        Assert.DoesNotContain(
+            root.GetProperty("dishes").EnumerateArray(),
+            dish => dish.GetProperty("name").GetString() == "Chicken adobo");
+        Assert.Equal(1, root.GetProperty("neverListHiddenCount").GetInt32());
+        Assert.Equal("vinegar", root.GetProperty("neverListBlocking")[0].GetString());
+
+        using var page = await client.GetAsync("/Profile/Preferences");
+        var html = await page.Content.ReadAsStringAsync();
+        Assert.Contains($"value=\"{vinegarId}\" id=\"never-{vinegarId}\" checked", html);
+        Assert.Contains("(1 selected)", html);
+    }
+
+    [Fact]
     public async Task Guest_SearchHasNoPreferences()
     {
         using var client = AuthHelper.CreateClient(_factory);

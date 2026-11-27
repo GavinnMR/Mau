@@ -262,6 +262,44 @@ public class SearchServiceTests
     }
 
     [Fact]
+    public async Task Search_NeverListGarlic_HidesDishesThatNeedItAndNamesIt()
+    {
+        var service = await CreateServiceAsync();
+
+        // Garlic (5) is required in every chicken dish of the test catalog.
+        var result = service.Search(new SearchRequest("chicken,", null, NeverIds: new[] { 5 }));
+
+        Assert.Empty(result.Dishes);
+        Assert.Equal(3, result.NeverListHiddenCount);
+        Assert.Equal(new[] { "garlic" }, result.NeverListBlocking);
+        Assert.Empty(result.NeverListOverridden);
+    }
+
+    [Fact]
+    public async Task Search_NeverListOptionalIngredient_DoesNotHideDish()
+    {
+        var service = await CreateServiceAsync();
+
+        // Bay leaf (7) is optional in chicken adobo.
+        var result = service.Search(new SearchRequest("chicken,", null, NeverIds: new[] { 7 }));
+
+        Assert.Contains(result.Dishes, dish => dish.Name == "Chicken adobo");
+        Assert.Equal(0, result.NeverListHiddenCount);
+    }
+
+    [Fact]
+    public async Task Search_TypedNeverListIngredient_OverridesTheList()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("pork,", null, NeverIds: new[] { 2 }));
+
+        Assert.Equal("Pork adobo", Assert.Single(result.Dishes).Name);
+        Assert.Equal(new[] { "pork" }, result.NeverListOverridden);
+        Assert.Equal(0, result.NeverListHiddenCount);
+    }
+
+    [Fact]
     public async Task Search_ChickenWithPantry_ShrinksStillNeededAndReorders()
     {
         var service = await CreateServiceAsync();

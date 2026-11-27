@@ -63,8 +63,9 @@ public sealed class ProfileController : Controller
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
         var preferences = await _preferenceService.GetAsync(userId);
+        var neverIds = await _preferenceService.GetNeverIdsAsync(userId);
 
-        return View(ProfileMapper.ToPreferencesViewModel(_catalog.Current, preferences));
+        return View(ProfileMapper.ToPreferencesViewModel(_catalog.Current, preferences, neverIds));
     }
 
     [HttpPost]
@@ -83,12 +84,13 @@ public sealed class ProfileController : Controller
 
             if (errors.Count == 0)
             {
+                await _preferenceService.SaveNeverIdsAsync(userId, form.NeverIds);
                 TempData["StatusMessage"] = "Preferences saved.";
                 return RedirectToAction(nameof(Preferences));
             }
         }
 
-        form.ProteinOptions = ProfileMapper.ProteinOptions(_catalog.Current);
+        ProfileMapper.FillOptions(form, _catalog.Current);
         return View(form);
     }
 

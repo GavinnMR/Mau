@@ -12,14 +12,36 @@ namespace Mau.Web.Mapping;
 public static class ProfileMapper
 {
     public static PreferencesViewModel ToPreferencesViewModel(
-        CatalogSnapshot catalog, UserPreferences preferences) =>
-        new()
+        CatalogSnapshot catalog, UserPreferences preferences, IReadOnlySet<int> neverIds)
+    {
+        var form = new PreferencesViewModel
         {
             PreferredProteinId = preferences.PreferredProteinId,
             PreferredMethod = preferences.PreferredMethod,
             MaxCookTimeMinutes = preferences.MaxCookTimeMinutes,
-            ProteinOptions = ProteinOptions(catalog),
+            NeverIds = neverIds.ToList(),
         };
+        FillOptions(form, catalog);
+        return form;
+    }
+
+    /// <summary>Fills the dropdown and checklist options, keeping the form's ticked ingredients.</summary>
+    public static void FillOptions(PreferencesViewModel form, CatalogSnapshot catalog)
+    {
+        form.ProteinOptions = ProteinOptions(catalog);
+        var selected = form.NeverIds.ToHashSet();
+        form.NeverGroups = Enum.GetValues<IngredientCategory>()
+            .Select(category => new PantryGroupViewModel(
+                GetTitle(category),
+                catalog.Ingredients
+                    .Where(ingredient => ingredient.Category == category)
+                    .OrderBy(ingredient => ingredient.CanonicalName, StringComparer.OrdinalIgnoreCase)
+                    .Select(ingredient => new PantryOptionViewModel(
+                        ingredient.Id, ingredient.CanonicalName, selected.Contains(ingredient.Id)))
+                    .ToList()))
+            .Where(group => group.Options.Count > 0)
+            .ToList();
+    }
 
     public static UserPreferences ToPreferences(PreferencesViewModel form) =>
         new(form.PreferredProteinId, form.PreferredMethod, form.MaxCookTimeMinutes);

@@ -254,6 +254,19 @@
     if (data.preferencesApplied === true && dishes.length > 1) {
       notes.push("Ranked using your preferences.");
     }
+    var neverHidden = typeof data.neverListHiddenCount === "number" ? data.neverListHiddenCount : 0;
+    var neverBlocking = Array.isArray(data.neverListBlocking) ? data.neverListBlocking : [];
+    var neverOverridden = Array.isArray(data.neverListOverridden) ? data.neverListOverridden : [];
+
+    if (neverHidden > 0) {
+      notes.push((neverHidden === 1 ? "1 dish hidden: it contains " : neverHidden + " dishes hidden: they contain ") +
+        neverBlocking.join(", ") + " (on your Never list).");
+    }
+    if (neverOverridden.length > 0) {
+      notes.push("Showing " + neverOverridden.join(", ") +
+        " because you typed it, even though it is on your Never list.");
+    }
+
     if (overLimit > 0 && overLimit === dishes.length) {
       notes.push("None fit your " + data.maxCookTimeMinutes + "-minute limit, but you can still pick one.");
     } else if (overLimit > 0) {
@@ -265,6 +278,10 @@
       setStatus(
         "Add at least one known ingredient to see dishes.",
         unknownTokens, false, pantryApplied);
+    } else if (dishes.length === 0 && neverHidden > 0) {
+      setStatus(
+        "Every matching dish contains something on your Never list.",
+        unknownTokens, false, pantryApplied, notes);
     } else if (dishes.length === 0) {
       setStatus(
         "No dish contains all of these ingredients.",

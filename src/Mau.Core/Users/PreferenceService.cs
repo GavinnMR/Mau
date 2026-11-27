@@ -8,12 +8,33 @@ namespace Mau.Core.Users;
 public sealed class PreferenceService : IPreferenceService
 {
     private readonly IPreferenceStore _store;
+    private readonly INeverListStore _neverStore;
     private readonly CatalogStore _catalog;
 
-    public PreferenceService(IPreferenceStore store, CatalogStore catalog)
+    public PreferenceService(IPreferenceStore store, INeverListStore neverStore, CatalogStore catalog)
     {
         _store = store;
+        _neverStore = neverStore;
         _catalog = catalog;
+    }
+
+    public async Task<IReadOnlySet<int>> GetNeverIdsAsync(
+        string userId, CancellationToken ct = default)
+    {
+        var ids = await _neverStore.GetIngredientIdsAsync(userId, ct);
+        return ids.Where(_catalog.Current.IngredientsById.ContainsKey).ToHashSet();
+    }
+
+    public async Task<int> SaveNeverIdsAsync(
+        string userId, IEnumerable<int>? ingredientIds, CancellationToken ct = default)
+    {
+        var ids = (ingredientIds ?? Array.Empty<int>())
+            .Where(_catalog.Current.IngredientsById.ContainsKey)
+            .Distinct()
+            .ToList();
+
+        await _neverStore.ReplaceAsync(userId, ids, ct);
+        return ids.Count;
     }
 
     public async Task<UserPreferences> GetAsync(string userId, CancellationToken ct = default)

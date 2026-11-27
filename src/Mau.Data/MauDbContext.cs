@@ -23,6 +23,7 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<DishFeedback> DishFeedback => Set<DishFeedback>();
     public DbSet<DishStat> DishStats => Set<DishStat>();
     public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
+    public DbSet<NeverIngredient> NeverIngredients => Set<NeverIngredient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -181,6 +182,20 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(preference => preference.PreferredProteinId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<NeverIngredient>(entity =>
+        {
+            entity.HasKey(item => new { item.UserId, item.IngredientId });
+            entity.Property(item => item.UserId).HasMaxLength(450);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.Ingredient)
+                .WithMany()
+                .HasForeignKey(item => item.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<DishStat>(entity =>

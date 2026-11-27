@@ -93,6 +93,38 @@ public class PreferenceStoreTests
         Assert.Equal(new UserPreferences(null, CookingMethod.Grilled, null), await store.GetAsync("u1"));
     }
 
+    [Fact]
+    public async Task NeverList_ReplaceThenGet_AndSecondReplaceReplaces()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        await database.CreateUserAsync("u1");
+        var store = new EfNeverListStore(database.ContextFactory);
+        var ids = await database.GetIngredientIdsAsync(3);
+
+        await store.ReplaceAsync("u1", new[] { ids[0], ids[1] });
+        await store.ReplaceAsync("u1", new[] { ids[2] });
+
+        Assert.Equal(new[] { ids[2] }, await store.GetIngredientIdsAsync("u1"));
+    }
+
+    [Fact]
+    public async Task NeverList_DeletingUser_Cascades()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        await database.CreateUserAsync("u1");
+        var ids = await database.GetIngredientIdsAsync(1);
+        await new EfNeverListStore(database.ContextFactory).ReplaceAsync("u1", ids);
+
+        await using (var context = await database.CreateContextAsync())
+        {
+            context.Users.Remove(await context.Users.SingleAsync(user => user.Id == "u1"));
+            await context.SaveChangesAsync();
+        }
+
+        await using var check = await database.CreateContextAsync();
+        Assert.Equal(0, await check.NeverIngredients.CountAsync());
+    }
+
     private static async Task<int> ProteinIdAsync(TestDatabase database, string name)
     {
         await using var context = await database.CreateContextAsync();

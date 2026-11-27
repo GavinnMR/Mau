@@ -17,6 +17,12 @@ public sealed class PreferencesViewModel
     [Display(Name = "Maximum cooking time (minutes)")]
     public int? MaxCookTimeMinutes { get; set; }
 
+    /// <summary>Ingredients the user never wants; dishes that need one are hidden.</summary>
+    public List<int> NeverIds { get; set; } = new();
+
     [BindNever]
     public IReadOnlyList<SelectListItem> ProteinOptions { get; set; } = [];
+
+    [BindNever]
+    public IReadOnlyList<PantryGroupViewModel> NeverGroups { get; set; } = [];
 }

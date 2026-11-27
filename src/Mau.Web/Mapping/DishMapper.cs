@@ -90,7 +90,12 @@ public static class DishMapper
             searchToken,
             preferences is { IsEmpty: false },
             result.OverTimeLimitCount,
-            preferences?.MaxCookTimeMinutes);
+            preferences?.MaxCookTimeMinutes)
+        {
+            NeverListHiddenCount = result.NeverListHiddenCount,
+            NeverListBlocking = result.NeverListBlocking,
+            NeverListOverridden = result.NeverListOverridden,
+        };
 
     public static IReadOnlyList<HintDto> ToDto(IEnumerable<IngredientHint> hints) =>
         hints

@@ -38,9 +38,10 @@ public sealed class SearchController : ApiControllerBase
         }
 
         var preferences = userId is null ? null : await _preferenceService.GetAsync(userId);
+        var neverIds = userId is null ? null : await _preferenceService.GetNeverIdsAsync(userId);
 
-        var result = _searchService.Search(
-            new SearchRequest(request.Text, request.ExcludedIds, pantryIds, preferences));
+        var result = _searchService.Search(new SearchRequest(
+            request.Text, request.ExcludedIds, pantryIds, preferences, neverIds));
 
         var searchToken = result.Dishes.Count > 0 ? _searchTokens.Issue() : null;
         return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }, searchToken, preferences));

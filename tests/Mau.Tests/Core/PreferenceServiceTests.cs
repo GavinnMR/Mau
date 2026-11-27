@@ -62,11 +62,32 @@ public class PreferenceServiceTests
         Assert.Equal(new UserPreferences(null, CookingMethod.Soup, null), await service.GetAsync("u1"));
     }
 
+    [Fact]
+    public async Task NeverIds_SaveKeepsOnlyKnownDistinctIds_AndGetReturnsThem()
+    {
+        var (service, _) = await CreateAsync();
+
+        var saved = await service.SaveNeverIdsAsync("u1", new[] { 2, 2, 8, 999 });
+
+        Assert.Equal(2, saved);
+        Assert.Equal(new[] { 2, 8 }, (await service.GetNeverIdsAsync("u1")).OrderBy(id => id));
+    }
+
+    [Fact]
+    public async Task NeverIds_SaveNull_Clears()
+    {
+        var (service, _) = await CreateAsync();
+        await service.SaveNeverIdsAsync("u1", new[] { 2 });
+
+        Assert.Equal(0, await service.SaveNeverIdsAsync("u1", null));
+        Assert.Empty(await service.GetNeverIdsAsync("u1"));
+    }
+
     private static async Task<(PreferenceService Service, FakePreferenceStore Store)> CreateAsync()
     {
         var catalog = new CatalogStore(new FakeCatalogLoader(TestCatalog.CreateSnapshot()));
         await catalog.ReloadAsync();
         var store = new FakePreferenceStore();
-        return (new PreferenceService(store, catalog), store);
+        return (new PreferenceService(store, new FakeNeverListStore(), catalog), store);
     }
 }

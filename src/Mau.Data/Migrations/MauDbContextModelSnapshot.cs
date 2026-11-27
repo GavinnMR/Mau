@@ -222,6 +222,22 @@ namespace Mau.Data.Migrations
                     b.ToTable("IngredientSynonyms");
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.NeverIngredient", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId", "IngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("NeverIngredients");
+                });
+
             modelBuilder.Entity("Mau.Core.Entities.PantryItem", b =>
                 {
                     b.Property<string>("UserId")
@@ -569,6 +585,23 @@ namespace Mau.Data.Migrations
                     b.HasOne("Mau.Core.Entities.Ingredient", "Ingredient")
                         .WithMany("Synonyms")
                         .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.NeverIngredient", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Ingredient", "Ingredient")
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Mau.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
