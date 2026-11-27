@@ -203,6 +203,88 @@ public class PreferencesSearchTests : IClassFixture<MauWebFactory>
     }
 
     [Fact]
+    public async Task SearchOverrides_TimeLimitAndPreferenceSwitch_ApplyToThisSearchOnly()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        using (var save = await AuthHelper.PostFormAsync(
+            client,
+            "/Profile/Preferences",
+            new[]
+            {
+                new KeyValuePair<string, string>("PreferredProteinId", ""),
+                new KeyValuePair<string, string>("PreferredMethod", "Soup"),
+                new KeyValuePair<string, string>("MaxCookTimeMinutes", "45"),
+            },
+            token))
+        {
+            Assert.Equal(HttpStatusCode.Redirect, save.StatusCode);
+        }
+
+        using var overridden = await SearchAsync(client, token, new
+        {
+            text = "chicken,",
+            usePreferences = false,
+            overrideMaxCookTime = true,
+            maxCookTimeMinutes = (int?)null,
+        });
+        var root = overridden.RootElement;
+        Assert.Equal(0, root.GetProperty("overTimeLimitCount").GetInt32());
+        Assert.Equal(JsonValueKind.Null, root.GetProperty("maxCookTimeMinutes").ValueKind);
+        Assert.All(
+            root.GetProperty("dishes").EnumerateArray(),
+            dish => Assert.Empty(dish.GetProperty("preferenceBadges").EnumerateArray()));
+
+        // The saved preferences are untouched: a plain search still uses them.
+        using var plain = await SearchAsync(client, token);
+        Assert.Equal(45, plain.RootElement.GetProperty("maxCookTimeMinutes").GetInt32());
+    }
+
+    [Fact]
+    public async Task Guest_CanSetATimeLimitForOneSearch()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+
+        using var json = await SearchAsync(client, token, new
+        {
+            text = "chicken,",
+            overrideMaxCookTime = true,
+            maxCookTimeMinutes = 40,
+        });
+
+        Assert.Equal(40, json.RootElement.GetProperty("maxCookTimeMinutes").GetInt32());
+        Assert.True(json.RootElement.GetProperty("overTimeLimitCount").GetInt32() > 0);
+    }
+
+    [Fact]
+    public async Task SearchPage_ShowsControlsStartingFromSavedPreferences()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        using (await AuthHelper.PostFormAsync(
+            client,
+            "/Profile/Preferences",
+            new[]
+            {
+                new KeyValuePair<string, string>("PreferredProteinId", ""),
+                new KeyValuePair<string, string>("PreferredMethod", "Fried"),
+                new KeyValuePair<string, string>("MaxCookTimeMinutes", "35"),
+            },
+            token))
+        {
+        }
+
+        using var page = await client.GetAsync("/");
+        var html = await page.Content.ReadAsStringAsync();
+
+        Assert.Contains("<option value=\"35\" selected=\"selected\">35 min</option>", html);
+        Assert.Contains("Rank by my preferences (Fried)", html);
+    }
+
+    [Fact]
     public async Task Guest_SearchHasNoPreferences()
     {
         using var client = AuthHelper.CreateClient(_factory);
@@ -214,10 +296,11 @@ public class PreferencesSearchTests : IClassFixture<MauWebFactory>
         Assert.Equal(0, json.RootElement.GetProperty("overTimeLimitCount").GetInt32());
     }
 
-    private static async Task<JsonDocument> SearchAsync(HttpClient client, string token)
+    private static async Task<JsonDocument> SearchAsync(
+        HttpClient client, string token, object? body = null)
     {
         using var response = await AuthHelper.SendJsonAsync(
-            client, HttpMethod.Post, "/api/search", new { text = "chicken," }, token);
+            client, HttpMethod.Post, "/api/search", body ?? new { text = "chicken," }, token);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return JsonDocument.Parse(await response.Content.ReadAsStringAsync());
     }

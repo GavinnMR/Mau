@@ -7,6 +7,8 @@
   var statusMessage = document.getElementById("status-message");
   var resultList = document.getElementById("result-list");
   var pantryCheckbox = document.getElementById("use-pantry");
+  var maxTimeSelect = document.getElementById("max-time");
+  var preferencesCheckbox = document.getElementById("use-preferences");
   var csrfMeta = document.querySelector('meta[name="csrf-token"]');
 
   if (!input || !hintList || !chipList || !statusMessage || !resultList) {
@@ -257,7 +259,10 @@
     var overLimit = typeof data.overTimeLimitCount === "number" ? data.overTimeLimitCount : 0;
     var notes = [];
 
-    if (data.preferencesApplied === true && dishes.length > 1) {
+    var anyPreferenceMatch = dishes.some(function (dish) {
+      return Array.isArray(dish.preferenceBadges) && dish.preferenceBadges.length > 0;
+    });
+    if (anyPreferenceMatch && dishes.length > 1) {
       notes.push("Ranked using your preferences.");
     }
     var neverHidden = typeof data.neverListHiddenCount === "number" ? data.neverListHiddenCount : 0;
@@ -373,7 +378,10 @@
       body: JSON.stringify({
         text: buildText(),
         excludedIds: Array.from(excludedIds),
-        usePantry: usesPantry()
+        usePantry: usesPantry(),
+        usePreferences: preferencesCheckbox === null || preferencesCheckbox.checked,
+        overrideMaxCookTime: maxTimeSelect !== null,
+        maxCookTimeMinutes: maxTimeSelect && maxTimeSelect.value ? Number(maxTimeSelect.value) : null
       })
     })
       .then(function (response) {
@@ -512,6 +520,14 @@
 
   if (pantryCheckbox) {
     pantryCheckbox.addEventListener("change", scheduleSearch);
+  }
+
+  if (maxTimeSelect) {
+    maxTimeSelect.addEventListener("change", scheduleSearch);
+  }
+
+  if (preferencesCheckbox) {
+    preferencesCheckbox.addEventListener("change", scheduleSearch);
   }
 
   resultList.addEventListener("click", logHistory);

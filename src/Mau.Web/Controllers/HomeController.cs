@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Security.Claims;
+using Mau.Core.Catalog;
 using Mau.Core.Users;
 using Mau.Web.Models;
 using Mau.Web.ViewModels;
@@ -10,23 +11,42 @@ namespace Mau.Web.Controllers;
 public class HomeController : Controller
 {
     private readonly IPantryService _pantryService;
+    private readonly IPreferenceService _preferenceService;
+    private readonly CatalogStore _catalog;
 
-    public HomeController(IPantryService pantryService)
+    public HomeController(
+        IPantryService pantryService, IPreferenceService preferenceService, CatalogStore catalog)
     {
         _pantryService = pantryService;
+        _preferenceService = preferenceService;
+        _catalog = catalog;
     }
 
     public async Task<IActionResult> Index()
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var pantryCount = 0;
-
-        if (userId is not null)
+        if (userId is null)
         {
-            pantryCount = (await _pantryService.GetIdsAsync(userId)).Count;
+            return View(new SearchPageViewModel(false, 0));
         }
 
-        return View(new SearchPageViewModel(userId is not null, pantryCount));
+        var pantryCount = (await _pantryService.GetIdsAsync(userId)).Count;
+        var preferences = await _preferenceService.GetAsync(userId);
+        var summary = new[]
+            {
+                preferences.PreferredProteinId is int id
+                    ? _catalog.Current.IngredientsById[id].CanonicalName
+                    : null,
+                preferences.PreferredMethod?.ToString(),
+            }
+            .Where(part => part is not null)
+            .ToList();
+
+        return View(new SearchPageViewModel(
+            true,
+            pantryCount,
+            preferences.MaxCookTimeMinutes,
+            summary.Count == 0 ? null : string.Join(", ", summary)));
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

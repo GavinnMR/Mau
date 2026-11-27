@@ -58,6 +58,16 @@ public sealed class SearchRequestDto
     public List<int>? ExcludedIds { get; set; }
 
     public bool UsePantry { get; set; }
+
+    /// <summary>False ranks this search without the saved protein and method preferences.</summary>
+    public bool UsePreferences { get; set; } = true;
+
+    /// <summary>True uses MaxCookTimeMinutes for this search instead of the saved limit.</summary>
+    public bool OverrideMaxCookTime { get; set; }
+
+    /// <summary>The time limit for this search when OverrideMaxCookTime is set; null means none.</summary>
+    [Range(5, 600, ErrorMessage = "Maximum cooking time must be between 5 and 600 minutes.")]
+    public int? MaxCookTimeMinutes { get; set; }
 }
 
 public sealed class FeedbackRequestDto

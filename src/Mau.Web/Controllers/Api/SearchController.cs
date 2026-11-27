@@ -37,7 +37,19 @@ public sealed class SearchController : ApiControllerBase
             pantryIds = await _pantryService.GetIdsAsync(userId);
         }
 
-        var preferences = userId is null ? null : await _preferenceService.GetAsync(userId);
+        var preferences = userId is null
+            ? UserPreferences.None
+            : await _preferenceService.GetAsync(userId);
+        if (!request.UsePreferences)
+        {
+            preferences = preferences with { PreferredProteinId = null, PreferredMethod = null };
+        }
+
+        if (request.OverrideMaxCookTime)
+        {
+            preferences = preferences with { MaxCookTimeMinutes = request.MaxCookTimeMinutes };
+        }
+
         var neverIds = userId is null ? null : await _preferenceService.GetNeverIdsAsync(userId);
 
         var result = _searchService.Search(new SearchRequest(
