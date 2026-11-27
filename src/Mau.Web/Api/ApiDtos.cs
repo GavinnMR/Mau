@@ -13,10 +13,11 @@ public sealed record TokenDto(
 
 public sealed record DishCardDto(
     int Id, string Name, CookingMethod CookingMethod, int CookTimeMinutes,
-    IReadOnlyList<string> StillNeeded, int MissingCount);
+    IReadOnlyList<string> StillNeeded, int MissingCount, double Score);
 
 public sealed record SearchResponseDto(
-    IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied)
+    IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied,
+    string? SearchToken = null)
 {
     public string Status => "ok";
 }
@@ -46,4 +47,26 @@ public sealed class SearchRequestDto
     public List<int>? ExcludedIds { get; set; }
 
     public bool UsePantry { get; set; }
+}
+
+public sealed class FeedbackRequestDto
+{
+    [Range(1, int.MaxValue, ErrorMessage = "DishId is required.")]
+    public int DishId { get; set; }
+
+    [Required(ErrorMessage = "Type is required.")]
+    [RegularExpression(
+        "^(cooked|thumbsUp|thumbsDown)$",
+        ErrorMessage = "Type must be cooked, thumbsUp or thumbsDown.")]
+    public string? Type { get; set; }
+
+    /// <summary>The search token from the dish link; "cooked" needs it.</summary>
+    [StringLength(500, ErrorMessage = "Search must be at most 500 characters.")]
+    public string? Search { get; set; }
+}
+
+public sealed record FeedbackResponseDto(
+    int DishId, int CookedByYou, string Vote, int CookedCount, int UpCount, int DownCount)
+{
+    public string Status => "ok";
 }

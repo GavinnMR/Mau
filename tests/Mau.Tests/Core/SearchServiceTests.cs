@@ -206,9 +206,10 @@ public class SearchServiceTests
 
         var result = service.Search(new SearchRequest("chicken,", null, new[] { 3, 4 }));
 
+        // Ranked by fit (FR-07): adobo has 4 of 5 required ingredients, garlic fried chicken 2 of 3.
         AssertDishes(result,
-            ("Garlic fried chicken", new[] { "garlic" }),
             ("Chicken adobo", new[] { "garlic" }),
+            ("Garlic fried chicken", new[] { "garlic" }),
             ("Chicken tinola", new[] { "ginger", "onion", "garlic" }));
     }
 

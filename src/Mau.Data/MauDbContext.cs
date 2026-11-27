@@ -20,6 +20,8 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Favorite> Favorites => Set<Favorite>();
     public DbSet<SearchLog> SearchLogs => Set<SearchLog>();
     public DbSet<SearchLogIngredient> SearchLogIngredients => Set<SearchLogIngredient>();
+    public DbSet<DishFeedback> DishFeedback => Set<DishFeedback>();
+    public DbSet<DishStat> DishStats => Set<DishStat>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -134,6 +136,37 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(row => row.Ingredient)
                 .WithMany()
                 .HasForeignKey(row => row.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<DishFeedback>(entity =>
+        {
+            entity.HasKey(feedback => feedback.Id);
+            entity.Property(feedback => feedback.UserId).HasMaxLength(450);
+            entity.Property(feedback => feedback.Type)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(feedback => feedback.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(feedback => feedback.Dish)
+                .WithMany()
+                .HasForeignKey(feedback => feedback.DishId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.Property(feedback => feedback.SearchKey).HasMaxLength(32);
+            entity.HasIndex(feedback => new { feedback.UserId, feedback.DishId, feedback.SearchKey })
+                .IsUnique()
+                .HasFilter("\"SearchKey\" IS NOT NULL");
+            entity.HasIndex(feedback => feedback.CreatedAt);
+        });
+
+        modelBuilder.Entity<DishStat>(entity =>
+        {
+            entity.HasKey(stat => stat.DishId);
+            entity.HasOne(stat => stat.Dish)
+                .WithOne()
+                .HasForeignKey<DishStat>(stat => stat.DishId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

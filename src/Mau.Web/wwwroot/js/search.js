@@ -169,7 +169,7 @@
     });
   }
 
-  function renderDishes(dishes) {
+  function renderDishes(dishes, searchToken) {
     resultList.textContent = "";
 
     dishes.forEach(function (dish) {
@@ -183,7 +183,8 @@
       title.className = "h5 card-title mb-2";
       var link = document.createElement("a");
       link.className = "dish-link";
-      link.href = "/Dish/Details/" + dish.id;
+      link.href = "/Dish/Details/" + dish.id +
+        (searchToken ? "?search=" + encodeURIComponent(searchToken) : "");
       link.textContent = dish.name;
       title.appendChild(link);
       body.appendChild(title);
@@ -225,7 +226,7 @@
     });
 
     renderChips(tokens);
-    renderDishes(dishes);
+    renderDishes(dishes, typeof data.searchToken === "string" ? data.searchToken : null);
 
     var pantryApplied = data.pantryApplied === true;
 

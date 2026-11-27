@@ -1,5 +1,6 @@
 using System.Globalization;
 using Mau.Core.Catalog;
+using Mau.Core.Feedback;
 using Mau.Core.Search;
 using Mau.Web.Api;
 using Mau.Web.ViewModels;
@@ -10,7 +11,8 @@ namespace Mau.Web.Mapping;
 public static class DishMapper
 {
     public static DishDetailsViewModel ToViewModel(
-        CatalogDish dish, bool isAuthenticated = false, bool isFavorite = false) =>
+        CatalogDish dish, bool isAuthenticated = false, bool isFavorite = false,
+        DishFeedbackViewModel? feedback = null) =>
         new(
             dish.Id,
             dish.Name,
@@ -26,7 +28,20 @@ public static class DishMapper
                 .ToList(),
             dish.Steps,
             isAuthenticated,
-            isFavorite);
+            isFavorite,
+            feedback);
+
+    public static DishFeedbackViewModel ToFeedbackViewModel(
+        DishTotals totals, UserDishFeedback user,
+        string cookedState = "needs-search", string? searchToken = null) =>
+        new(
+            totals.CookedCount,
+            totals.UpCount,
+            totals.DownCount,
+            user.CookedCount,
+            user.Vote switch { Vote.Up => "up", Vote.Down => "down", _ => "none" },
+            cookedState,
+            searchToken);
 
     public static DishDetailsDto ToDto(CatalogDish dish) =>
         new(
@@ -46,7 +61,8 @@ public static class DishMapper
                 .ToList(),
             dish.Steps);
 
-    public static SearchResponseDto ToDto(SearchResult result, bool pantryApplied) =>
+    public static SearchResponseDto ToDto(
+        SearchResult result, bool pantryApplied, string? searchToken = null) =>
         new(
             result.Tokens
                 .Select(token => new TokenDto(
@@ -64,9 +80,11 @@ public static class DishMapper
                     dish.CookingMethod,
                     dish.CookTimeMinutes,
                     dish.StillNeeded,
-                    dish.MissingCount))
+                    dish.MissingCount,
+                    Math.Round(dish.Score, 4)))
                 .ToList(),
-            pantryApplied);
+            pantryApplied,
+            searchToken);
 
     public static IReadOnlyList<HintDto> ToDto(IEnumerable<IngredientHint> hints) =>
         hints

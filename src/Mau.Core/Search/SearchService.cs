@@ -1,5 +1,7 @@
 using Mau.Core.Catalog;
 using Mau.Core.Engine;
+using Mau.Core.Feedback;
+using Mau.Core.Ranking;
 
 namespace Mau.Core.Search;
 
@@ -10,10 +12,12 @@ public sealed class SearchService : ISearchService
     private static readonly IReadOnlySet<int> EmptyIds = new HashSet<int>();
 
     private readonly CatalogStore _store;
+    private readonly IRankingService _ranking;
 
-    public SearchService(CatalogStore store)
+    public SearchService(CatalogStore store, IRankingService? ranking = null)
     {
         _store = store;
+        _ranking = ranking ?? new RankingService(NoDishTotals.Instance, new RankingOptions());
     }
 
     public SearchResult Search(SearchRequest request)
@@ -66,7 +70,7 @@ public sealed class SearchService : ISearchService
             return new SearchResult(tokens, Array.Empty<DishMatch>());
         }
 
-        var matches = new List<DishMatch>();
+        var toRank = new List<RankCandidate>();
         foreach (var dishId in candidates)
         {
             var dish = snapshot.DishesById[dishId];
@@ -81,21 +85,16 @@ public sealed class SearchService : ISearchService
                 .Select(row => row.Name)
                 .ToList();
 
-            matches.Add(new DishMatch(
+            var match = new DishMatch(
                 dish.Id,
                 dish.Name,
                 dish.CookingMethod,
                 dish.CookTimeMinutes,
-                stillNeeded));
+                stillNeeded);
+            toRank.Add(new RankCandidate(match, dish.Ingredients.Count(row => !row.IsOptional)));
         }
 
-        var ordered = matches
-            .OrderBy(match => match.MissingCount)
-            .ThenBy(match => match.CookTimeMinutes)
-            .ThenBy(match => match.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        return new SearchResult(tokens, ordered);
+        return new SearchResult(tokens, _ranking.Rank(toRank));
     }
 
     public IReadOnlyList<IngredientHint> GetHints(string? prefix)

@@ -12,7 +12,7 @@ public sealed record SearchToken(int Index, string Raw, int? IngredientId, strin
 /// <summary>A dish that contains every included ingredient.</summary>
 public sealed record DishMatch(
     int DishId, string Name, CookingMethod CookingMethod, int CookTimeMinutes,
-    IReadOnlyList<string> StillNeeded)
+    IReadOnlyList<string> StillNeeded, double Score = 0)
 {
     public int MissingCount => StillNeeded.Count;
 }

@@ -63,11 +63,63 @@
     }
 </ol>
 
+@if (Model.Feedback is { } feedback)
+{
+    <section id="feedback" class="mb-4" aria-labelledby="feedback-heading"
+             data-dish-id="@Model.Id" data-search="@feedback.SearchToken">
+        <h2 id="feedback-heading">Feedback</h2>
+        <p id="feedback-totals" class="text-muted">
+            Cooked <span data-total="cooked">@feedback.CookedCount</span>
+            <span data-total="cooked-word">@(feedback.CookedCount == 1 ? "time" : "times")</span> ·
+            <span data-total="up">@feedback.UpCount</span> thumbs up ·
+            <span data-total="down">@feedback.DownCount</span> thumbs down
+        </p>
+        @if (Model.IsAuthenticated)
+        {
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                @if (feedback.CookedState == "available")
+                {
+                    <button type="button" class="btn btn-outline-success" data-feedback="cooked">I cooked this</button>
+                }
+                else if (feedback.CookedState == "done")
+                {
+                    <button type="button" class="btn btn-outline-success" data-feedback="cooked" disabled>Marked as cooked ✓</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-outline-success" data-feedback="cooked" disabled
+                            aria-describedby="cooked-hint">I cooked this</button>
+                }
+                <button type="button" class="btn btn-outline-secondary" data-feedback="thumbsUp"
+                        aria-label="Thumbs up" aria-pressed="@(feedback.Vote == "up" ? "true" : "false")">👍</button>
+                <button type="button" class="btn btn-outline-secondary" data-feedback="thumbsDown"
+                        aria-label="Thumbs down" aria-pressed="@(feedback.Vote == "down" ? "true" : "false")">👎</button>
+                <span id="feedback-mine" class="text-muted">
+                    @if (feedback.CookedByYou > 0)
+                    {
+                        @($"You cooked this {feedback.CookedByYou} {(feedback.CookedByYou == 1 ? "time" : "times")}.")
+                    }
+                </span>
+            </div>
+            @if (feedback.CookedState == "needs-search")
+            {
+                <p id="cooked-hint" class="form-text mb-0">Open this dish from your search results to mark it as cooked.</p>
+            }
+            <p id="feedback-status" class="visually-hidden" role="status" aria-live="polite"></p>
+        }
+        else
+        {
+            <a href="@Url.Action("Login", "Account", new { returnUrl = Context.Request.Path + Context.Request.QueryString })">Log in to rate this dish</a>
+        }
+    </section>
+}
+
 <a href="/">← Back to search</a>
 
 @section Scripts {
     @if (Model.IsAuthenticated)
     {
         <script src="~/js/favorite.js" asp-append-version="true"></script>
+        <script src="~/js/feedback.js" asp-append-version="true"></script>
     }
 }
