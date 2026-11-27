@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Mau.Core.Feedback;
 using Mau.Core.Search;
 using Mau.Core.Users;
 using Mau.Web.Mapping;
@@ -10,12 +11,17 @@ public sealed class DishController : Controller
 {
     private readonly ISearchService _searchService;
     private readonly IFavoriteService _favoriteService;
+    private readonly IFeedbackService _feedbackService;
+    private readonly DishStatsCache _stats;
 
     public DishController(
-        ISearchService searchService, IFavoriteService favoriteService)
+        ISearchService searchService, IFavoriteService favoriteService,
+        IFeedbackService feedbackService, DishStatsCache stats)
     {
         _searchService = searchService;
         _favoriteService = favoriteService;
+        _feedbackService = feedbackService;
+        _stats = stats;
     }
 
     public async Task<IActionResult> Details(int id)
@@ -32,6 +38,11 @@ public sealed class DishController : Controller
         var isFavorite = isAuthenticated &&
             await _favoriteService.IsFavoriteAsync(userId!, id);
 
-        return View(DishMapper.ToViewModel(dish, isAuthenticated, isFavorite));
+        var userFeedback = isAuthenticated
+            ? await _feedbackService.GetForUserAsync(userId!, id)
+            : UserDishFeedback.None;
+        var feedback = DishMapper.ToFeedbackViewModel(_stats.Get(id), userFeedback);
+
+        return View(DishMapper.ToViewModel(dish, isAuthenticated, isFavorite, feedback));
     }
 }

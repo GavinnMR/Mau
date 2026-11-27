@@ -120,3 +120,62 @@ public class FeedbackApiTests : IClassFixture<MauWebFactory>
         return json.RootElement.GetProperty("vote").GetString();
     }
 }
+
+public class FeedbackPageTests : IClassFixture<MauWebFactory>
+{
+    private readonly MauWebFactory _factory;
+
+    public FeedbackPageTests(MauWebFactory factory)
+    {
+        _factory = factory;
+    }
+
+    [Fact]
+    public async Task Guest_SeesTotalsAndLoginLink_NoButtons()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+
+        var html = await GetDetailsAsync(client, "Chicken adobo");
+
+        Assert.Contains("id=\"feedback-totals\"", html);
+        Assert.Contains("Log in to rate this dish", html);
+        Assert.DoesNotContain("data-feedback=\"cooked\"", html);
+        Assert.DoesNotContain("feedback.js", html);
+    }
+
+    [Fact]
+    public async Task LoggedIn_AfterFeedback_PageShowsPressedVoteAndOwnCount()
+    {
+        using var client = AuthHelper.CreateClient(_factory);
+        await AuthHelper.RegisterAsync(client);
+        var token = await AuthHelper.GetCsrfTokenAsync(client);
+        var dishId = _factory.Services.GetRequiredService<CatalogStore>().Current.DishesById.Values
+            .Single(dish => dish.Name == "Garlic fried chicken").Id;
+
+        foreach (var type in new[] { "cooked", "thumbsDown" })
+        {
+            using var response = await AuthHelper.SendJsonAsync(
+                client, HttpMethod.Post, "/api/feedback", new { dishId, type }, token);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        var html = await GetDetailsAsync(client, "Garlic fried chicken");
+
+        Assert.Contains("data-feedback=\"cooked\"", html);
+        Assert.Matches(
+            "data-feedback=\"thumbsDown\"\\s+aria-label=\"Thumbs down\" aria-pressed=\"true\"", html);
+        Assert.Matches(
+            "data-feedback=\"thumbsUp\"\\s+aria-label=\"Thumbs up\" aria-pressed=\"false\"", html);
+        Assert.Contains("You cooked this 1 time.", html);
+        Assert.Contains("feedback.js", html);
+    }
+
+    private async Task<string> GetDetailsAsync(HttpClient client, string name)
+    {
+        var dishId = _factory.Services.GetRequiredService<CatalogStore>().Current.DishesById.Values
+            .Single(dish => dish.Name == name).Id;
+        using var response = await client.GetAsync($"/Dish/Details/{dishId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        return await response.Content.ReadAsStringAsync();
+    }
+}
