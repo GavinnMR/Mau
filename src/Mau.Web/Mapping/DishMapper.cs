@@ -84,7 +84,10 @@ public static class DishMapper
                     dish.StillNeeded,
                     dish.MissingCount,
                     Math.Round(dish.Score, 4),
-                    dish.OverTimeLimit))
+                    dish.OverTimeLimit)
+                {
+                    PreferenceBadges = PreferenceBadges(dish),
+                })
                 .ToList(),
             pantryApplied,
             searchToken,
@@ -96,6 +99,22 @@ public static class DishMapper
             NeverListBlocking = result.NeverListBlocking,
             NeverListOverridden = result.NeverListOverridden,
         };
+
+    private static IReadOnlyList<string> PreferenceBadges(DishMatch dish)
+    {
+        var badges = new List<string>();
+        if (dish.MatchedProtein is string protein)
+        {
+            badges.Add($"{protein}, your protein");
+        }
+
+        if (dish.MatchedMethod)
+        {
+            badges.Add($"{dish.CookingMethod}, your method");
+        }
+
+        return badges;
+    }
 
     public static IReadOnlyList<HintDto> ToDto(IEnumerable<IngredientHint> hints) =>
         hints

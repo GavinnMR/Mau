@@ -114,9 +114,13 @@ public sealed class SearchService : ISearchService
                 dish.CookTimeMinutes,
                 stillNeeded,
                 OverTimeLimit: dish.CookTimeMinutes > preferences.MaxCookTimeMinutes);
-            var preferenceMatches =
-                (preferences.PreferredProteinId is int proteinId && dish.MainProteinId == proteinId ? 1 : 0) +
-                (dish.CookingMethod == preferences.PreferredMethod ? 1 : 0);
+            var matchedProtein = preferences.PreferredProteinId is int proteinId &&
+                dish.MainProteinId == proteinId
+                    ? snapshot.IngredientsById[proteinId].CanonicalName
+                    : null;
+            var matchedMethod = dish.CookingMethod == preferences.PreferredMethod;
+            match = match with { MatchedProtein = matchedProtein, MatchedMethod = matchedMethod };
+            var preferenceMatches = (matchedProtein is null ? 0 : 1) + (matchedMethod ? 1 : 0);
             toRank.Add(new RankCandidate(
                 match, dish.Ingredients.Count(row => !row.IsOptional), preferenceMatches));
         }

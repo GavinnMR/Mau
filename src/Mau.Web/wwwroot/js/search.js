@@ -215,6 +215,12 @@
       time.className = "text-muted";
       time.textContent = dish.cookTimeMinutes + " min";
       meta.appendChild(time);
+      (Array.isArray(dish.preferenceBadges) ? dish.preferenceBadges : []).forEach(function (text) {
+        var preference = document.createElement("span");
+        preference.className = "badge preference-badge ms-2";
+        preference.textContent = "\u2713 " + text;
+        meta.appendChild(preference);
+      });
       body.appendChild(meta);
 
       var needed = document.createElement("p");

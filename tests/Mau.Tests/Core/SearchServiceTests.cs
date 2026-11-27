@@ -262,6 +262,25 @@ public class SearchServiceTests
     }
 
     [Fact]
+    public async Task Search_MarksWhichPreferencesEachDishMatches()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest(
+            "garlic,", null, Preferences: new UserPreferences(1, CookingMethod.Braised, null)));
+
+        var chickenAdobo = result.Dishes.Single(dish => dish.Name == "Chicken adobo");
+        Assert.Equal("chicken", chickenAdobo.MatchedProtein);
+        Assert.True(chickenAdobo.MatchedMethod);
+        var porkAdobo = result.Dishes.Single(dish => dish.Name == "Pork adobo");
+        Assert.Null(porkAdobo.MatchedProtein);
+        Assert.True(porkAdobo.MatchedMethod);
+        var tinola = result.Dishes.Single(dish => dish.Name == "Chicken tinola");
+        Assert.Equal("chicken", tinola.MatchedProtein);
+        Assert.False(tinola.MatchedMethod);
+    }
+
+    [Fact]
     public async Task Search_NeverListGarlic_HidesDishesThatNeedItAndNamesIt()
     {
         var service = await CreateServiceAsync();

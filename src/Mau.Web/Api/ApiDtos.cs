@@ -13,7 +13,11 @@ public sealed record TokenDto(
 
 public sealed record DishCardDto(
     int Id, string Name, CookingMethod CookingMethod, int CookTimeMinutes,
-    IReadOnlyList<string> StillNeeded, int MissingCount, double Score, bool OverTimeLimit = false);
+    IReadOnlyList<string> StillNeeded, int MissingCount, double Score, bool OverTimeLimit = false)
+{
+    /// <summary>Short labels for the preferences this dish matches, e.g. "chicken, your protein".</summary>
+    public IReadOnlyList<string> PreferenceBadges { get; init; } = [];
+}
 
 public sealed record SearchResponseDto(
     IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied,

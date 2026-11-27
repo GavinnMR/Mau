@@ -146,6 +146,13 @@ public class PreferencesSearchTests : IClassFixture<MauWebFactory>
         Assert.True(last.GetProperty("overTimeLimit").GetBoolean());
         Assert.All(dishes.SkipLast(1), dish => Assert.False(dish.GetProperty("overTimeLimit").GetBoolean()));
 
+        var tinola = dishes.Single(dish => dish.GetProperty("name").GetString() == "Chicken tinola");
+        Assert.Equal(
+            new[] { "Soup, your method" },
+            tinola.GetProperty("preferenceBadges").EnumerateArray().Select(item => item.GetString()));
+        var fried = dishes.Single(dish => dish.GetProperty("name").GetString() == "Garlic fried chicken");
+        Assert.Empty(fried.GetProperty("preferenceBadges").EnumerateArray());
+
         // The Soup preference doubles tinola's score relative to a non-soup dish.
         var guestRatio = Score(guest, "Chicken tinola") / Score(guest, "Garlic fried chicken");
         var userRatio = Score(json, "Chicken tinola") / Score(json, "Garlic fried chicken");

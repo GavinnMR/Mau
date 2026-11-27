@@ -20,6 +20,12 @@ public sealed record DishMatch(
     IReadOnlyList<string> StillNeeded, double Score = 0, bool OverTimeLimit = false)
 {
     public int MissingCount => StillNeeded.Count;
+
+    /// <summary>The preferred protein's name when the dish's main protein matches it.</summary>
+    public string? MatchedProtein { get; init; }
+
+    /// <summary>True when the dish uses the user's preferred cooking method.</summary>
+    public bool MatchedMethod { get; init; }
 }
 
 /// <summary>The tokens and matching dishes for one search.</summary>
