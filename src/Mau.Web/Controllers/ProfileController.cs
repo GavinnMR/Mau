@@ -3,6 +3,7 @@ using Mau.Core.Catalog;
 using Mau.Core.Search;
 using Mau.Core.Users;
 using Mau.Web.Mapping;
+using Mau.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,14 +18,17 @@ public sealed class ProfileController : Controller
     private readonly ISearchService _searchService;
     private readonly IFavoriteService _favoriteService;
     private readonly ISearchHistoryService _historyService;
+    private readonly IPreferenceService _preferenceService;
 
     public ProfileController(
         CatalogStore catalog,
         IPantryService pantryService,
         ISearchService searchService,
         IFavoriteService favoriteService,
-        ISearchHistoryService historyService)
+        ISearchHistoryService historyService,
+        IPreferenceService preferenceService)
     {
+        _preferenceService = preferenceService;
         _catalog = catalog;
         _pantryService = pantryService;
         _searchService = searchService;
@@ -52,6 +56,42 @@ public sealed class ProfileController : Controller
             : $"Pantry saved: {saved} ingredients.";
 
         return RedirectToAction(nameof(Pantry));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Preferences()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var preferences = await _preferenceService.GetAsync(userId);
+        var neverIds = await _preferenceService.GetNeverIdsAsync(userId);
+
+        return View(ProfileMapper.ToPreferencesViewModel(_catalog.Current, preferences, neverIds));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Preferences(PreferencesViewModel form)
+    {
+        if (ModelState.IsValid)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var errors = await _preferenceService.SaveAsync(
+                userId, ProfileMapper.ToPreferences(form));
+
+            foreach (var error in errors)
+            {
+                ModelState.AddModelError(error.Field, error.Message);
+            }
+
+            if (errors.Count == 0)
+            {
+                await _preferenceService.SaveNeverIdsAsync(userId, form.NeverIds);
+                TempData["StatusMessage"] = "Preferences saved.";
+                return RedirectToAction(nameof(Preferences));
+            }
+        }
+
+        ProfileMapper.FillOptions(form, _catalog.Current);
+        return View(form);
     }
 
     [HttpGet]

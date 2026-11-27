@@ -18,4 +18,5 @@ public sealed record CatalogDishIngredient(
 public sealed record CatalogDish(
     int Id, string Name, string Description, CookingMethod CookingMethod, int CookTimeMinutes,
     IReadOnlyList<string> Steps,
-    IReadOnlyList<CatalogDishIngredient> Ingredients);
+    IReadOnlyList<CatalogDishIngredient> Ingredients,
+    int? MainProteinId = null);

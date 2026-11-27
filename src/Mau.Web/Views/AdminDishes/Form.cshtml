@@ -10,6 +10,11 @@
         new("— choose —", ""),
     };
     ingredientOptions.AddRange(Model.IngredientOptions);
+    var proteinOptions = new List<SelectListItem>
+    {
+        new("— none —", ""),
+    };
+    proteinOptions.AddRange(Model.ProteinOptions);
 }
 
 <h1>@ViewData["Title"]</h1>
@@ -29,11 +34,16 @@
     </div>
 
     <div class="row">
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
             <label asp-for="CookingMethod" class="form-label"></label>
             <select asp-for="CookingMethod" asp-items="Html.GetEnumSelectList<CookingMethod>()" class="form-select"></select>
         </div>
-        <div class="col-md-6 mb-3">
+        <div class="col-md-4 mb-3">
+            <label asp-for="MainProteinId" class="form-label"></label>
+            <select asp-for="MainProteinId" asp-items="proteinOptions" class="form-select" aria-describedby="main-protein-help"></select>
+            <div id="main-protein-help" class="form-text">Used to match users' preferred protein. It must be one of the ingredients below.</div>
+        </div>
+        <div class="col-md-4 mb-3">
             <label asp-for="CookTimeMinutes" class="form-label"></label>
             <input asp-for="CookTimeMinutes" type="number" min="1" max="600" class="form-control" />
         </div>

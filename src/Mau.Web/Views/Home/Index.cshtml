@@ -34,6 +34,31 @@
         }
     </div>
 
+    <div id="search-options" class="d-flex flex-wrap align-items-center gap-3 mb-3">
+        <div class="d-flex align-items-center gap-2">
+            <label for="max-time" class="form-label mb-0">Max time</label>
+            <select id="max-time" class="form-select form-select-sm w-auto" aria-describedby="max-time-note">
+                <option value="" selected="@(Model.SavedMaxCookTime is null)">Any</option>
+                @foreach (var minutes in Model.TimeChoices)
+                {
+                    <option value="@minutes" selected="@(Model.SavedMaxCookTime == minutes)">@minutes min</option>
+                }
+            </select>
+            <span id="max-time-note" class="form-text m-0">Longer dishes are shown last.</span>
+        </div>
+        @if (Model.PreferenceSummary is string summary)
+        {
+            <div class="form-check m-0">
+                <input class="form-check-input" type="checkbox" id="use-preferences" checked />
+                <label class="form-check-label" for="use-preferences">Rank by my preferences (@summary)</label>
+            </div>
+        }
+        @if (Model.IsAuthenticated)
+        {
+            <a href="/Profile/Preferences" class="small">Edit preferences</a>
+        }
+    </div>
+
     <div id="chip-list" aria-label="Your ingredients" class="mb-3"></div>
     <div id="status-message" role="status" aria-live="polite" class="mb-3"></div>
     <div id="result-list"></div>

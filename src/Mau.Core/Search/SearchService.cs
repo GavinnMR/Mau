@@ -2,6 +2,7 @@ using Mau.Core.Catalog;
 using Mau.Core.Engine;
 using Mau.Core.Feedback;
 using Mau.Core.Ranking;
+using Mau.Core.Users;
 
 namespace Mau.Core.Search;
 
@@ -38,6 +39,13 @@ public sealed class SearchService : ISearchService
             .Select(token => token.IngredientId!.Value)
             .ToHashSet();
 
+        // A never-list ingredient the user typed on purpose counts for this search.
+        var neverIds = (request.NeverIds ?? Array.Empty<int>()).ToHashSet();
+        var neverOverridden = neverIds.Where(includeIds.Contains).ToList();
+        neverIds.ExceptWith(includeIds);
+        var neverHidden = 0;
+        var neverBlocking = new HashSet<int>();
+
         if (includeIds.Count == 0)
         {
             return new SearchResult(tokens, Array.Empty<DishMatch>());
@@ -71,11 +79,25 @@ public sealed class SearchService : ISearchService
         }
 
         var toRank = new List<RankCandidate>();
+        var preferences = request.Preferences ?? UserPreferences.None;
+
         foreach (var dishId in candidates)
         {
             var dish = snapshot.DishesById[dishId];
             if (dish.Ingredients.Any(row => excluded.Contains(row.IngredientId)))
             {
+                continue;
+            }
+
+            // Optional ingredients can be left out, so only required ones hide a dish.
+            var blocking = dish.Ingredients
+                .Where(row => !row.IsOptional && neverIds.Contains(row.IngredientId))
+                .Select(row => row.IngredientId)
+                .ToList();
+            if (blocking.Count > 0)
+            {
+                neverHidden++;
+                neverBlocking.UnionWith(blocking);
                 continue;
             }
 
@@ -90,12 +112,36 @@ public sealed class SearchService : ISearchService
                 dish.Name,
                 dish.CookingMethod,
                 dish.CookTimeMinutes,
-                stillNeeded);
-            toRank.Add(new RankCandidate(match, dish.Ingredients.Count(row => !row.IsOptional)));
+                stillNeeded,
+                OverTimeLimit: dish.CookTimeMinutes > preferences.MaxCookTimeMinutes);
+            var matchedProtein = preferences.PreferredProteinId is int proteinId &&
+                dish.MainProteinId == proteinId
+                    ? snapshot.IngredientsById[proteinId].CanonicalName
+                    : null;
+            var matchedMethod = dish.CookingMethod == preferences.PreferredMethod;
+            match = match with { MatchedProtein = matchedProtein, MatchedMethod = matchedMethod };
+            var preferenceMatches = (matchedProtein is null ? 0 : 1) + (matchedMethod ? 1 : 0);
+            toRank.Add(new RankCandidate(
+                match, dish.Ingredients.Count(row => !row.IsOptional), preferenceMatches));
         }
 
-        return new SearchResult(tokens, _ranking.Rank(toRank));
+        // Dishes over the time limit stay visible, but only after every dish within it.
+        var ranked = _ranking.Rank(toRank)
+            .OrderBy(match => match.OverTimeLimit)
+            .ToList();
+
+        return new SearchResult(tokens, ranked, ranked.Count(match => match.OverTimeLimit))
+        {
+            NeverListHiddenCount = neverHidden,
+            NeverListBlocking = NamesOf(snapshot, neverBlocking),
+            NeverListOverridden = NamesOf(snapshot, neverOverridden),
+        };
     }
+
+    private static IReadOnlyList<string> NamesOf(CatalogSnapshot snapshot, IEnumerable<int> ids) =>
+        ids.Select(id => snapshot.IngredientsById[id].CanonicalName)
+            .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     public IReadOnlyList<IngredientHint> GetHints(string? prefix)
     {

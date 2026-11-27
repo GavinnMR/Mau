@@ -1,0 +1,59 @@
+@using Mau.Core.Entities
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model PreferencesViewModel
+@{
+    ViewData["Title"] = "Your preferences";
+    var proteinOptions = new List<SelectListItem> { new("No preference", "") };
+    proteinOptions.AddRange(Model.ProteinOptions);
+    var methodOptions = new List<SelectListItem> { new("No preference", "") };
+    methodOptions.AddRange(Enum.GetValues<CookingMethod>()
+        .Select(method => new SelectListItem(method.ToString(), method.ToString())));
+}
+
+<h1>Your preferences</h1>
+
+<p>Mau ranks dishes with your preferred protein and cooking method higher, and shows dishes that take longer than your maximum cooking time last. You can change the time limit or switch your preferences off for a single search on the search page. Leave anything you don't mind empty.</p>
+
+<form method="post" class="col-lg-8">
+    <div asp-validation-summary="All" class="text-danger"></div>
+
+    <div class="mb-3">
+        <label asp-for="PreferredProteinId" class="form-label"></label>
+        <select asp-for="PreferredProteinId" asp-items="proteinOptions" class="form-select"></select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="PreferredMethod" class="form-label"></label>
+        <select asp-for="PreferredMethod" asp-items="methodOptions" class="form-select"></select>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MaxCookTimeMinutes" class="form-label"></label>
+        <input asp-for="MaxCookTimeMinutes" type="number" min="5" max="600" step="5" class="form-control"
+               aria-describedby="max-time-help" />
+        <div id="max-time-help" class="form-text">For example 30 for weeknight cooking. Empty means no limit.</div>
+    </div>
+
+    @{
+        var neverCount = Model.NeverIds.Count;
+    }
+    <details class="mb-3" id="never-list" @(neverCount > 0 ? "open" : "")>
+        <summary class="h5">Never show dishes with… (@neverCount selected)</summary>
+        <p class="form-text">For allergies, diets or ingredients you simply don't eat. Dishes that need one of these are hidden from your results. Optional ingredients don't count, since you can leave them out. If you type one of these in a search, Mau shows it for that search.</p>
+        @foreach (var group in Model.NeverGroups)
+        {
+            <fieldset class="mb-2">
+                <legend class="h6">@group.Title</legend>
+                @foreach (var option in group.Options)
+                {
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" name="NeverIds" value="@option.Id" id="never-@option.Id" @(option.Selected ? "checked" : "") />
+                        <label class="form-check-label" for="never-@option.Id">@option.Name</label>
+                    </div>
+                }
+            </fieldset>
+        }
+    </details>
+
+    <button type="submit" class="btn btn-primary">Save preferences</button>
+</form>

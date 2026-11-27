@@ -22,6 +22,8 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<SearchLogIngredient> SearchLogIngredients => Set<SearchLogIngredient>();
     public DbSet<DishFeedback> DishFeedback => Set<DishFeedback>();
     public DbSet<DishStat> DishStats => Set<DishStat>();
+    public DbSet<UserPreference> UserPreferences => Set<UserPreference>();
+    public DbSet<NeverIngredient> NeverIngredients => Set<NeverIngredient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -71,6 +73,10 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
             entity.Property(dish => dish.Steps)
                 .IsRequired()
                 .HasMaxLength(4000);
+            entity.HasOne(dish => dish.MainProtein)
+                .WithMany()
+                .HasForeignKey(dish => dish.MainProteinId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<DishIngredient>(entity =>
@@ -159,6 +165,37 @@ public class MauDbContext : IdentityDbContext<ApplicationUser>
                 .IsUnique()
                 .HasFilter("\"SearchKey\" IS NOT NULL");
             entity.HasIndex(feedback => feedback.CreatedAt);
+        });
+
+        modelBuilder.Entity<UserPreference>(entity =>
+        {
+            entity.HasKey(preference => preference.UserId);
+            entity.Property(preference => preference.UserId).HasMaxLength(450);
+            entity.Property(preference => preference.PreferredMethod)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            entity.HasOne<ApplicationUser>()
+                .WithOne()
+                .HasForeignKey<UserPreference>(preference => preference.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(preference => preference.PreferredProtein)
+                .WithMany()
+                .HasForeignKey(preference => preference.PreferredProteinId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<NeverIngredient>(entity =>
+        {
+            entity.HasKey(item => new { item.UserId, item.IngredientId });
+            entity.Property(item => item.UserId).HasMaxLength(450);
+            entity.HasOne<ApplicationUser>()
+                .WithMany()
+                .HasForeignKey(item => item.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(item => item.Ingredient)
+                .WithMany()
+                .HasForeignKey(item => item.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<DishStat>(entity =>

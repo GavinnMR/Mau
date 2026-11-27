@@ -14,10 +14,13 @@ public sealed class SearchController : ApiControllerBase
     private readonly ISearchService _searchService;
     private readonly IPantryService _pantryService;
     private readonly SearchTokens _searchTokens;
+    private readonly IPreferenceService _preferenceService;
 
     public SearchController(
-        ISearchService searchService, IPantryService pantryService, SearchTokens searchTokens)
+        ISearchService searchService, IPantryService pantryService, SearchTokens searchTokens,
+        IPreferenceService preferenceService)
     {
+        _preferenceService = preferenceService;
         _searchService = searchService;
         _pantryService = pantryService;
         _searchTokens = searchTokens;
@@ -34,10 +37,25 @@ public sealed class SearchController : ApiControllerBase
             pantryIds = await _pantryService.GetIdsAsync(userId);
         }
 
-        var result = _searchService.Search(
-            new SearchRequest(request.Text, request.ExcludedIds, pantryIds));
+        var preferences = userId is null
+            ? UserPreferences.None
+            : await _preferenceService.GetAsync(userId);
+        if (!request.UsePreferences)
+        {
+            preferences = preferences with { PreferredProteinId = null, PreferredMethod = null };
+        }
+
+        if (request.OverrideMaxCookTime)
+        {
+            preferences = preferences with { MaxCookTimeMinutes = request.MaxCookTimeMinutes };
+        }
+
+        var neverIds = userId is null ? null : await _preferenceService.GetNeverIdsAsync(userId);
+
+        var result = _searchService.Search(new SearchRequest(
+            request.Text, request.ExcludedIds, pantryIds, preferences, neverIds));
 
         var searchToken = result.Dishes.Count > 0 ? _searchTokens.Issue() : null;
-        return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }, searchToken));
+        return Ok(DishMapper.ToDto(result, pantryIds is { Count: > 0 }, searchToken, preferences));
     }
 }

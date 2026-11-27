@@ -1,3 +1,5 @@
+using Mau.Core.Users;
+using Mau.Core.Entities;
 using Mau.Core.Catalog;
 using Mau.Core.Search;
 using Mau.Tests.Support;
@@ -197,6 +199,123 @@ public class SearchServiceTests
         var dish = service.GetDish(999);
 
         Assert.Null(dish);
+    }
+
+    [Fact]
+    public async Task Search_PreferredMethodSoup_MovesTinolaToTheTop()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest(
+            "chicken,", null, Preferences: new UserPreferences(null, CookingMethod.Soup, null)));
+
+        Assert.Equal("Chicken tinola", result.Dishes[0].Name);
+        Assert.Equal(0, result.OverTimeLimitCount);
+    }
+
+    [Fact]
+    public async Task Search_PreferredProteinPork_LiftsPorkAdoboAboveChickenAdobo()
+    {
+        var service = await CreateServiceAsync();
+
+        var plain = service.Search(new SearchRequest("garlic,", null));
+        var preferred = service.Search(new SearchRequest(
+            "garlic,", null, Preferences: new UserPreferences(2, null, null)));
+
+        Assert.True(
+            plain.Dishes.ToList().FindIndex(dish => dish.Name == "Pork adobo") >
+            plain.Dishes.ToList().FindIndex(dish => dish.Name == "Chicken adobo"));
+        Assert.True(
+            preferred.Dishes.ToList().FindIndex(dish => dish.Name == "Pork adobo") <
+            preferred.Dishes.ToList().FindIndex(dish => dish.Name == "Chicken adobo"));
+    }
+
+    [Fact]
+    public async Task Search_MaxCookTime_KeepsLongerDishesButShowsThemLast()
+    {
+        var service = await CreateServiceAsync();
+
+        // With soy sauce and vinegar in the pantry, chicken adobo (45 min) would rank first.
+        var result = service.Search(new SearchRequest(
+            "chicken,", null, new[] { 3, 4 }, new UserPreferences(null, null, 40)));
+
+        Assert.Equal(
+            new[] { "Garlic fried chicken", "Chicken tinola", "Chicken adobo" },
+            result.Dishes.Select(dish => dish.Name));
+        Assert.True(result.Dishes[^1].OverTimeLimit);
+        Assert.False(result.Dishes[0].OverTimeLimit);
+        Assert.Equal(1, result.OverTimeLimitCount);
+        Assert.Equal(1.0, result.Dishes.Sum(dish => dish.Score), 9);
+    }
+
+    [Fact]
+    public async Task Search_MaxCookTime_AllOverLimit_StillReturnsThem()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest(
+            "chicken,", null, Preferences: new UserPreferences(null, null, 10)));
+
+        Assert.Equal(3, result.Dishes.Count);
+        Assert.Equal(3, result.OverTimeLimitCount);
+        Assert.Equal("Garlic fried chicken", result.Dishes[0].Name);
+    }
+
+    [Fact]
+    public async Task Search_MarksWhichPreferencesEachDishMatches()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest(
+            "garlic,", null, Preferences: new UserPreferences(1, CookingMethod.Braised, null)));
+
+        var chickenAdobo = result.Dishes.Single(dish => dish.Name == "Chicken adobo");
+        Assert.Equal("chicken", chickenAdobo.MatchedProtein);
+        Assert.True(chickenAdobo.MatchedMethod);
+        var porkAdobo = result.Dishes.Single(dish => dish.Name == "Pork adobo");
+        Assert.Null(porkAdobo.MatchedProtein);
+        Assert.True(porkAdobo.MatchedMethod);
+        var tinola = result.Dishes.Single(dish => dish.Name == "Chicken tinola");
+        Assert.Equal("chicken", tinola.MatchedProtein);
+        Assert.False(tinola.MatchedMethod);
+    }
+
+    [Fact]
+    public async Task Search_NeverListGarlic_HidesDishesThatNeedItAndNamesIt()
+    {
+        var service = await CreateServiceAsync();
+
+        // Garlic (5) is required in every chicken dish of the test catalog.
+        var result = service.Search(new SearchRequest("chicken,", null, NeverIds: new[] { 5 }));
+
+        Assert.Empty(result.Dishes);
+        Assert.Equal(3, result.NeverListHiddenCount);
+        Assert.Equal(new[] { "garlic" }, result.NeverListBlocking);
+        Assert.Empty(result.NeverListOverridden);
+    }
+
+    [Fact]
+    public async Task Search_NeverListOptionalIngredient_DoesNotHideDish()
+    {
+        var service = await CreateServiceAsync();
+
+        // Bay leaf (7) is optional in chicken adobo.
+        var result = service.Search(new SearchRequest("chicken,", null, NeverIds: new[] { 7 }));
+
+        Assert.Contains(result.Dishes, dish => dish.Name == "Chicken adobo");
+        Assert.Equal(0, result.NeverListHiddenCount);
+    }
+
+    [Fact]
+    public async Task Search_TypedNeverListIngredient_OverridesTheList()
+    {
+        var service = await CreateServiceAsync();
+
+        var result = service.Search(new SearchRequest("pork,", null, NeverIds: new[] { 2 }));
+
+        Assert.Equal("Pork adobo", Assert.Single(result.Dishes).Name);
+        Assert.Equal(new[] { "pork" }, result.NeverListOverridden);
+        Assert.Equal(0, result.NeverListHiddenCount);
     }
 
     [Fact]

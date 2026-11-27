@@ -94,6 +94,9 @@ builder.Services.AddSingleton<ISearchLogStore, EfSearchLogStore>();
 builder.Services.AddSingleton<IPantryService, PantryService>();
 builder.Services.AddSingleton<IFavoriteService, FavoriteService>();
 builder.Services.AddSingleton<ISearchHistoryService, SearchHistoryService>();
+builder.Services.AddSingleton<IPreferenceStore, EfPreferenceStore>();
+builder.Services.AddSingleton<INeverListStore, EfNeverListStore>();
+builder.Services.AddSingleton<IPreferenceService, PreferenceService>();
 
 builder.Services.AddSingleton<IFeedbackStore, EfFeedbackStore>();
 builder.Services.AddSingleton<DishStatsCache>();

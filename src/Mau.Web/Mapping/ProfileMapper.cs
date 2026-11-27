@@ -4,12 +4,57 @@ using Mau.Core.Entities;
 using Mau.Core.Search;
 using Mau.Core.Users;
 using Mau.Web.ViewModels;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Mau.Web.Mapping;
 
 /// <summary>Builds profile page view models from the catalog and a user's ids.</summary>
 public static class ProfileMapper
 {
+    public static PreferencesViewModel ToPreferencesViewModel(
+        CatalogSnapshot catalog, UserPreferences preferences, IReadOnlySet<int> neverIds)
+    {
+        var form = new PreferencesViewModel
+        {
+            PreferredProteinId = preferences.PreferredProteinId,
+            PreferredMethod = preferences.PreferredMethod,
+            MaxCookTimeMinutes = preferences.MaxCookTimeMinutes,
+            NeverIds = neverIds.ToList(),
+        };
+        FillOptions(form, catalog);
+        return form;
+    }
+
+    /// <summary>Fills the dropdown and checklist options, keeping the form's ticked ingredients.</summary>
+    public static void FillOptions(PreferencesViewModel form, CatalogSnapshot catalog)
+    {
+        form.ProteinOptions = ProteinOptions(catalog);
+        var selected = form.NeverIds.ToHashSet();
+        form.NeverGroups = Enum.GetValues<IngredientCategory>()
+            .Select(category => new PantryGroupViewModel(
+                GetTitle(category),
+                catalog.Ingredients
+                    .Where(ingredient => ingredient.Category == category)
+                    .OrderBy(ingredient => ingredient.CanonicalName, StringComparer.OrdinalIgnoreCase)
+                    .Select(ingredient => new PantryOptionViewModel(
+                        ingredient.Id, ingredient.CanonicalName, selected.Contains(ingredient.Id)))
+                    .ToList()))
+            .Where(group => group.Options.Count > 0)
+            .ToList();
+    }
+
+    public static UserPreferences ToPreferences(PreferencesViewModel form) =>
+        new(form.PreferredProteinId, form.PreferredMethod, form.MaxCookTimeMinutes);
+
+    public static IReadOnlyList<SelectListItem> ProteinOptions(CatalogSnapshot catalog) =>
+        catalog.Ingredients
+            .Where(ingredient => ingredient.Category == IngredientCategory.Protein)
+            .OrderBy(ingredient => ingredient.CanonicalName, StringComparer.OrdinalIgnoreCase)
+            .Select(ingredient => new SelectListItem(
+                ingredient.CanonicalName,
+                ingredient.Id.ToString(CultureInfo.InvariantCulture)))
+            .ToList();
+
     public static PantryViewModel ToPantryViewModel(
         CatalogSnapshot catalog, IReadOnlySet<int> selectedIds)
     {

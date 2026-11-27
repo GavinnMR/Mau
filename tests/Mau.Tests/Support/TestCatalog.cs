@@ -32,7 +32,7 @@ public static class TestCatalog
     {
         var byId = ingredients.ToDictionary(i => i.Id);
 
-        return new List<Dish>
+        var dishes = new List<Dish>
         {
             CreateDish(1, "Chicken adobo", "Chicken braised in soy sauce and vinegar.", CookingMethod.Braised, 45,
                 "Brown the chicken.\n\nSimmer until tender.\n",
@@ -64,6 +64,14 @@ public static class TestCatalog
                 Row(byId, 4, 5, 1),
                 Row(byId, 4, 8, 2)),
         };
+
+        // Main proteins: chicken (1) for the chicken dishes, pork (2) for pork adobo.
+        foreach (var dish in dishes)
+        {
+            dish.MainProteinId = dish.Id == 2 ? 2 : 1;
+        }
+
+        return dishes;
     }
 
     private static Ingredient CreateIngredient(

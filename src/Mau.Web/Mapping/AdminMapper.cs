@@ -1,6 +1,7 @@
 using System.Globalization;
 using Mau.Core.Admin;
 using Mau.Core.Catalog;
+using Mau.Core.Entities;
 using Mau.Web.ViewModels.Admin;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -88,7 +89,8 @@ public static class AdminMapper
             form.Ingredients
                 .Select(row => new DishIngredientInput(
                     row.IngredientId, row.Quantity, row.Unit, row.IsOptional))
-                .ToList());
+                .ToList(),
+            form.MainProteinId);
     }
 
     public static DishFormViewModel FromDish(CatalogDish dish)
@@ -100,6 +102,7 @@ public static class AdminMapper
             Description = dish.Description,
             CookingMethod = dish.CookingMethod,
             CookTimeMinutes = dish.CookTimeMinutes,
+            MainProteinId = dish.MainProteinId,
             Steps = string.Join("\r\n", dish.Steps),
             Ingredients = dish.Ingredients
                 .Select(row => new DishIngredientFormRow
@@ -127,6 +130,15 @@ public static class AdminMapper
     public static IReadOnlyList<SelectListItem> IngredientOptions(
         CatalogSnapshot catalog) =>
         catalog.Ingredients
+            .OrderBy(ingredient => ingredient.CanonicalName, StringComparer.OrdinalIgnoreCase)
+            .Select(ingredient => new SelectListItem(
+                ingredient.CanonicalName,
+                ingredient.Id.ToString(CultureInfo.InvariantCulture)))
+            .ToList();
+
+    public static IReadOnlyList<SelectListItem> ProteinOptions(CatalogSnapshot catalog) =>
+        catalog.Ingredients
+            .Where(ingredient => ingredient.Category == IngredientCategory.Protein)
             .OrderBy(ingredient => ingredient.CanonicalName, StringComparer.OrdinalIgnoreCase)
             .Select(ingredient => new SelectListItem(
                 ingredient.CanonicalName,

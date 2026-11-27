@@ -36,6 +36,9 @@ namespace Mau.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("MainProteinId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -48,6 +51,8 @@ namespace Mau.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MainProteinId");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -217,6 +222,22 @@ namespace Mau.Data.Migrations
                     b.ToTable("IngredientSynonyms");
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.NeverIngredient", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("IngredientId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId", "IngredientId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("NeverIngredients");
+                });
+
             modelBuilder.Entity("Mau.Core.Entities.PantryItem", b =>
                 {
                     b.Property<string>("UserId")
@@ -269,6 +290,29 @@ namespace Mau.Data.Migrations
                     b.HasIndex("IngredientId");
 
                     b.ToTable("SearchLogIngredients");
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.UserPreference", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MaxCookTimeMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PreferredMethod")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PreferredProteinId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("UserId");
+
+                    b.HasIndex("PreferredProteinId");
+
+                    b.ToTable("UserPreferences");
                 });
 
             modelBuilder.Entity("Mau.Data.Identity.ApplicationUser", b =>
@@ -463,6 +507,16 @@ namespace Mau.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.Dish", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Ingredient", "MainProtein")
+                        .WithMany()
+                        .HasForeignKey("MainProteinId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("MainProtein");
+                });
+
             modelBuilder.Entity("Mau.Core.Entities.DishFeedback", b =>
                 {
                     b.HasOne("Mau.Core.Entities.Dish", "Dish")
@@ -537,6 +591,23 @@ namespace Mau.Data.Migrations
                     b.Navigation("Ingredient");
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.NeverIngredient", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Ingredient", "Ingredient")
+                        .WithMany()
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Mau.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+                });
+
             modelBuilder.Entity("Mau.Core.Entities.PantryItem", b =>
                 {
                     b.HasOne("Mau.Core.Entities.Ingredient", "Ingredient")
@@ -579,6 +650,22 @@ namespace Mau.Data.Migrations
                     b.Navigation("Ingredient");
 
                     b.Navigation("SearchLog");
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.UserPreference", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Ingredient", "PreferredProtein")
+                        .WithMany()
+                        .HasForeignKey("PreferredProteinId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Mau.Data.Identity.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("Mau.Core.Entities.UserPreference", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PreferredProtein");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -28,6 +28,10 @@ internal sealed class SeedDish
     public string Description { get; set; } = "";
     public CookingMethod CookingMethod { get; set; }
     public int CookTimeMinutes { get; set; }
+
+    /// <summary>The main protein's name; when left out, the first protein ingredient.</summary>
+    public string? MainProtein { get; set; }
+
     public List<string> Steps { get; set; } = new();
     public List<SeedDishIngredient> Ingredients { get; set; } = new();
 }

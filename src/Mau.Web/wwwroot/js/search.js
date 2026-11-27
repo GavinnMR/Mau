@@ -7,6 +7,8 @@
   var statusMessage = document.getElementById("status-message");
   var resultList = document.getElementById("result-list");
   var pantryCheckbox = document.getElementById("use-pantry");
+  var maxTimeSelect = document.getElementById("max-time");
+  var preferencesCheckbox = document.getElementById("use-preferences");
   var csrfMeta = document.querySelector('meta[name="csrf-token"]');
 
   if (!input || !hintList || !chipList || !statusMessage || !resultList) {
@@ -65,7 +67,7 @@
       !pantryCheckbox.disabled;
   }
 
-  function setStatus(mainText, unknownTokens, showRemoveButton, pantryApplied) {
+  function setStatus(mainText, unknownTokens, showRemoveButton, pantryApplied, notes) {
     statusMessage.textContent = "";
 
     var main = document.createElement("p");
@@ -79,6 +81,13 @@
       pantryLine.textContent = "Your pantry is counted as ingredients you already have.";
       statusMessage.appendChild(pantryLine);
     }
+
+    (notes || []).forEach(function (note) {
+      var noteLine = document.createElement("p");
+      noteLine.className = "mb-1";
+      noteLine.textContent = note;
+      statusMessage.appendChild(noteLine);
+    });
 
     if (showRemoveButton) {
       var removeButton = document.createElement("button");
@@ -169,12 +178,21 @@
     });
   }
 
-  function renderDishes(dishes, searchToken) {
+  function renderDishes(dishes, searchToken, maxMinutes) {
     resultList.textContent = "";
+    var shownLimitHeading = false;
 
     dishes.forEach(function (dish) {
+      if (dish.overTimeLimit === true && !shownLimitHeading) {
+        shownLimitHeading = true;
+        var heading = document.createElement("h2");
+        heading.className = "h6 text-muted mt-4 mb-2 over-limit-heading";
+        heading.textContent = "Takes longer than your " + maxMinutes + "-minute limit";
+        resultList.appendChild(heading);
+      }
+
       var card = document.createElement("div");
-      card.className = "card mb-2";
+      card.className = dish.overTimeLimit === true ? "card mb-2 over-limit" : "card mb-2";
 
       var body = document.createElement("div");
       body.className = "card-body";
@@ -199,6 +217,12 @@
       time.className = "text-muted";
       time.textContent = dish.cookTimeMinutes + " min";
       meta.appendChild(time);
+      (Array.isArray(dish.preferenceBadges) ? dish.preferenceBadges : []).forEach(function (text) {
+        var preference = document.createElement("span");
+        preference.className = "badge preference-badge ms-2";
+        preference.textContent = "\u2713 " + text;
+        meta.appendChild(preference);
+      });
       body.appendChild(meta);
 
       var needed = document.createElement("p");
@@ -226,24 +250,60 @@
     });
 
     renderChips(tokens);
-    renderDishes(dishes, typeof data.searchToken === "string" ? data.searchToken : null);
+    renderDishes(
+      dishes,
+      typeof data.searchToken === "string" ? data.searchToken : null,
+      data.maxCookTimeMinutes);
 
     var pantryApplied = data.pantryApplied === true;
+    var overLimit = typeof data.overTimeLimitCount === "number" ? data.overTimeLimitCount : 0;
+    var notes = [];
+
+    var anyPreferenceMatch = dishes.some(function (dish) {
+      return Array.isArray(dish.preferenceBadges) && dish.preferenceBadges.length > 0;
+    });
+    if (anyPreferenceMatch && dishes.length > 1) {
+      notes.push("Ranked using your preferences.");
+    }
+    var neverHidden = typeof data.neverListHiddenCount === "number" ? data.neverListHiddenCount : 0;
+    var neverBlocking = Array.isArray(data.neverListBlocking) ? data.neverListBlocking : [];
+    var neverOverridden = Array.isArray(data.neverListOverridden) ? data.neverListOverridden : [];
+
+    if (neverHidden > 0) {
+      notes.push((neverHidden === 1 ? "1 dish hidden: it contains " : neverHidden + " dishes hidden: they contain ") +
+        neverBlocking.join(", ") + " (on your Never list).");
+    }
+    if (neverOverridden.length > 0) {
+      notes.push("Showing " + neverOverridden.join(", ") +
+        " because you typed it, even though it is on your Never list.");
+    }
+
+    if (overLimit > 0 && overLimit === dishes.length) {
+      notes.push("None fit your " + data.maxCookTimeMinutes + "-minute limit, but you can still pick one.");
+    } else if (overLimit > 0) {
+      notes.push((overLimit === 1 ? "1 dish takes" : overLimit + " dishes take") +
+        " longer than your " + data.maxCookTimeMinutes + "-minute limit; shown last.");
+    }
 
     if (!hasUsableIngredient) {
       setStatus(
         "Add at least one known ingredient to see dishes.",
         unknownTokens, false, pantryApplied);
+    } else if (dishes.length === 0 && neverHidden > 0) {
+      setStatus(
+        "Every matching dish contains something on your Never list.",
+        unknownTokens, false, pantryApplied, notes);
     } else if (dishes.length === 0) {
       setStatus(
         "No dish contains all of these ingredients.",
-        unknownTokens, true, pantryApplied);
+        unknownTokens, true, pantryApplied, notes);
     } else {
       setStatus(
         dishes.length + (dishes.length === 1 ? " dish found." : " dishes found."),
         unknownTokens,
         false,
-        pantryApplied);
+        pantryApplied,
+        notes);
     }
   }
 
@@ -318,7 +378,10 @@
       body: JSON.stringify({
         text: buildText(),
         excludedIds: Array.from(excludedIds),
-        usePantry: usesPantry()
+        usePantry: usesPantry(),
+        usePreferences: preferencesCheckbox === null || preferencesCheckbox.checked,
+        overrideMaxCookTime: maxTimeSelect !== null,
+        maxCookTimeMinutes: maxTimeSelect && maxTimeSelect.value ? Number(maxTimeSelect.value) : null
       })
     })
       .then(function (response) {
@@ -457,6 +520,14 @@
 
   if (pantryCheckbox) {
     pantryCheckbox.addEventListener("change", scheduleSearch);
+  }
+
+  if (maxTimeSelect) {
+    maxTimeSelect.addEventListener("change", scheduleSearch);
+  }
+
+  if (preferencesCheckbox) {
+    preferencesCheckbox.addEventListener("change", scheduleSearch);
   }
 
   resultList.addEventListener("click", logHistory);

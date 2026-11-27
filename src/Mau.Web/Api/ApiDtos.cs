@@ -13,12 +13,23 @@ public sealed record TokenDto(
 
 public sealed record DishCardDto(
     int Id, string Name, CookingMethod CookingMethod, int CookTimeMinutes,
-    IReadOnlyList<string> StillNeeded, int MissingCount, double Score);
+    IReadOnlyList<string> StillNeeded, int MissingCount, double Score, bool OverTimeLimit = false)
+{
+    /// <summary>Short labels for the preferences this dish matches, e.g. "chicken, your protein".</summary>
+    public IReadOnlyList<string> PreferenceBadges { get; init; } = [];
+}
 
 public sealed record SearchResponseDto(
     IReadOnlyList<TokenDto> Tokens, IReadOnlyList<DishCardDto> Dishes, bool PantryApplied,
-    string? SearchToken = null)
+    string? SearchToken = null, bool PreferencesApplied = false, int OverTimeLimitCount = 0,
+    int? MaxCookTimeMinutes = null)
 {
+    public int NeverListHiddenCount { get; init; }
+
+    public IReadOnlyList<string> NeverListBlocking { get; init; } = [];
+
+    public IReadOnlyList<string> NeverListOverridden { get; init; } = [];
+
     public string Status => "ok";
 }
 
@@ -47,6 +58,16 @@ public sealed class SearchRequestDto
     public List<int>? ExcludedIds { get; set; }
 
     public bool UsePantry { get; set; }
+
+    /// <summary>False ranks this search without the saved protein and method preferences.</summary>
+    public bool UsePreferences { get; set; } = true;
+
+    /// <summary>True uses MaxCookTimeMinutes for this search instead of the saved limit.</summary>
+    public bool OverrideMaxCookTime { get; set; }
+
+    /// <summary>The time limit for this search when OverrideMaxCookTime is set; null means none.</summary>
+    [Range(5, 600, ErrorMessage = "Maximum cooking time must be between 5 and 600 minutes.")]
+    public int? MaxCookTimeMinutes { get; set; }
 }
 
 public sealed class FeedbackRequestDto

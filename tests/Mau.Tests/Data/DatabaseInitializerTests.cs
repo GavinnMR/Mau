@@ -20,6 +20,34 @@ public class DatabaseInitializerTests
         Assert.Equal(14, await context.Dishes.CountAsync());
     }
 
+    [Theory]
+    [InlineData("Chicken adobo", "chicken")]
+    [InlineData("Tortang talong", "egg")]
+    [InlineData("Ginataang kalabasa at sitaw", "shrimp")]
+    [InlineData("Ginisang monggo", null)]
+    public async Task InitializeAsync_SeedsMainProteins(string dish, string? protein)
+    {
+        await using var database = await TempDatabase.CreateAsync();
+        await using var context = await database.CreateContextAsync();
+
+        var row = await context.Dishes
+            .Include(item => item.MainProtein)
+            .SingleAsync(item => item.Name == dish);
+
+        Assert.Equal(protein, row.MainProtein?.CanonicalName);
+    }
+
+    [Fact]
+    public async Task EfCatalogLoader_CarriesMainProtein()
+    {
+        await using var database = await TempDatabase.CreateAsync();
+
+        var snapshot = await database.CreateLoader().LoadAsync();
+
+        var adobo = snapshot.Dishes.Single(dish => dish.Name == "Pork adobo");
+        Assert.Equal("pork", snapshot.IngredientsById[adobo.MainProteinId!.Value].CanonicalName);
+    }
+
     [Fact]
     public async Task InitializeAsync_CalledTwice_DoesNotDuplicateRows()
     {
