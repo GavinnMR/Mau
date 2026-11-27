@@ -47,3 +47,21 @@ public sealed class SearchRequestDto
 
     public bool UsePantry { get; set; }
 }
+
+public sealed class FeedbackRequestDto
+{
+    [Range(1, int.MaxValue, ErrorMessage = "DishId is required.")]
+    public int DishId { get; set; }
+
+    [Required(ErrorMessage = "Type is required.")]
+    [RegularExpression(
+        "^(cooked|thumbsUp|thumbsDown)$",
+        ErrorMessage = "Type must be cooked, thumbsUp or thumbsDown.")]
+    public string? Type { get; set; }
+}
+
+public sealed record FeedbackResponseDto(
+    int DishId, int CookedByYou, string Vote, int CookedCount, int UpCount, int DownCount)
+{
+    public string Status => "ok";
+}

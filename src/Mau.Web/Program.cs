@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using Mau.Core.Admin;
 using Mau.Core.Catalog;
+using Mau.Core.Feedback;
 using Mau.Core.Search;
 using Mau.Core.Users;
 using Mau.Data;
@@ -84,6 +85,10 @@ builder.Services.AddSingleton<IPantryService, PantryService>();
 builder.Services.AddSingleton<IFavoriteService, FavoriteService>();
 builder.Services.AddSingleton<ISearchHistoryService, SearchHistoryService>();
 
+builder.Services.AddSingleton<IFeedbackStore, EfFeedbackStore>();
+builder.Services.AddSingleton<DishStatsCache>();
+builder.Services.AddSingleton<IFeedbackService, FeedbackService>();
+
 var app = builder.Build();
 
 var enUs = new CultureInfo("en-US");
@@ -115,6 +120,7 @@ app.MapControllerRoute(
 await DatabaseInitializer.InitializeAsync(app.Services);
 await AdminSeeder.EnsureAdminAsync(app.Services);
 await app.Services.GetRequiredService<CatalogStore>().ReloadAsync();
+await app.Services.GetRequiredService<DishStatsCache>().ReloadAsync();
 
 app.Run();
 
