@@ -55,6 +55,38 @@ namespace Mau.Data.Migrations
                     b.ToTable("Dishes");
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.DishFeedback", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DishId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DishId");
+
+                    b.HasIndex("UserId", "DishId");
+
+                    b.ToTable("DishFeedback");
+                });
+
             modelBuilder.Entity("Mau.Core.Entities.DishIngredient", b =>
                 {
                     b.Property<int>("DishId")
@@ -81,6 +113,25 @@ namespace Mau.Data.Migrations
                     b.HasIndex("IngredientId");
 
                     b.ToTable("DishIngredients");
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.DishStat", b =>
+                {
+                    b.Property<int>("DishId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CookedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DownCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UpCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("DishId");
+
+                    b.ToTable("DishStats");
                 });
 
             modelBuilder.Entity("Mau.Core.Entities.Favorite", b =>
@@ -406,6 +457,22 @@ namespace Mau.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Mau.Core.Entities.DishFeedback", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Dish", "Dish")
+                        .WithMany()
+                        .HasForeignKey("DishId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Mau.Data.Identity.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Dish");
+                });
+
             modelBuilder.Entity("Mau.Core.Entities.DishIngredient", b =>
                 {
                     b.HasOne("Mau.Core.Entities.Dish", "Dish")
@@ -423,6 +490,17 @@ namespace Mau.Data.Migrations
                     b.Navigation("Dish");
 
                     b.Navigation("Ingredient");
+                });
+
+            modelBuilder.Entity("Mau.Core.Entities.DishStat", b =>
+                {
+                    b.HasOne("Mau.Core.Entities.Dish", "Dish")
+                        .WithOne()
+                        .HasForeignKey("Mau.Core.Entities.DishStat", "DishId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Dish");
                 });
 
             modelBuilder.Entity("Mau.Core.Entities.Favorite", b =>

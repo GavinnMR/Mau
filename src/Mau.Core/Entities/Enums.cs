@@ -8,3 +8,6 @@ public enum CookingMethod { Braised, Stewed, Soup, Fried, Grilled, Sauteed }
 
 /// <summary>The language a synonym comes from.</summary>
 public enum SynonymLanguage { English, Filipino }
+
+/// <summary>The kind of feedback a user gives a dish.</summary>
+public enum FeedbackType { Cooked, ThumbsUp, ThumbsDown }
