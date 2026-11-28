@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using Mau.Core.Admin;
 using Mau.Core.Catalog;
+using Mau.Core.Engine;
 using Mau.Core.Feedback;
 using Mau.Core.Ranking;
 using Mau.Core.Search;
@@ -76,7 +77,14 @@ builder.Services.AddDbContextFactory<MauDbContext>((serviceProvider, options) =>
 
 builder.Services.AddSingleton<ICatalogLoader, EfCatalogLoader>();
 builder.Services.AddSingleton<CatalogStore>();
-builder.Services.AddSingleton<ISearchService, SearchService>();
+builder.Services.Configure<FuzzyOptions>(
+    builder.Configuration.GetSection(FuzzyOptions.SectionName));
+builder.Services.AddSingleton(serviceProvider =>
+    serviceProvider.GetRequiredService<IOptions<FuzzyOptions>>().Value);
+builder.Services.AddSingleton<ISearchService>(serviceProvider => new SearchService(
+    serviceProvider.GetRequiredService<CatalogStore>(),
+    serviceProvider.GetRequiredService<IRankingService>(),
+    serviceProvider.GetRequiredService<FuzzyOptions>()));
 builder.Services.Configure<RankingOptions>(
     builder.Configuration.GetSection(RankingOptions.SectionName));
 builder.Services.AddSingleton(serviceProvider =>

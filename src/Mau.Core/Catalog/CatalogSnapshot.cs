@@ -12,8 +12,10 @@ public sealed class CatalogSnapshot
         IReadOnlyDictionary<int, CatalogIngredient> ingredientsById,
         IReadOnlyDictionary<int, CatalogDish> dishesById,
         IReadOnlyDictionary<int, IReadOnlySet<int>> dishIdsByIngredientId,
-        IngredientRecognizer recognizer)
+        IngredientRecognizer recognizer,
+        FuzzyMatcher fuzzy)
     {
+        Fuzzy = fuzzy;
         Ingredients = ingredients;
         Dishes = dishes;
         IngredientsById = ingredientsById;
@@ -28,6 +30,9 @@ public sealed class CatalogSnapshot
     public IReadOnlyDictionary<int, CatalogDish> DishesById { get; }
     public IReadOnlyDictionary<int, IReadOnlySet<int>> DishIdsByIngredientId { get; }
     public IngredientRecognizer Recognizer { get; }
+
+    /// <summary>Suggests known names for unknown words; built once per snapshot.</summary>
+    public FuzzyMatcher Fuzzy { get; }
 
     public static CatalogSnapshot Create(IEnumerable<Ingredient> ingredients, IEnumerable<Dish> dishes)
     {
@@ -93,7 +98,8 @@ public sealed class CatalogSnapshot
             catalogIngredients.ToDictionary(ingredient => ingredient.Id),
             catalogDishes.ToDictionary(dish => dish.Id),
             readOnlyDishIds,
-            recognizer);
+            recognizer,
+            new FuzzyMatcher(lexicon));
     }
 
     private static void AddLexiconEntry(List<LexiconEntry> entries, string name, int ingredientId)

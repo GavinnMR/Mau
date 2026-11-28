@@ -167,6 +167,27 @@ public class ApiTests : IClassFixture<MauWebFactory>
     }
 
     [Fact]
+    public async Task PostSearch_MisspelledWord_ReturnsDidYouMeanSuggestions()
+    {
+        using var client = CreateClient();
+        var token = await CsrfHelper.GetTokenAsync(client);
+
+        using var response = await PostSearchAsync(
+            client, new { text = "toyo, chiken, bawangg," }, token);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var tokens = json.RootElement.GetProperty("tokens");
+        Assert.Empty(tokens[0].GetProperty("suggestions").EnumerateArray());
+        Assert.Equal(
+            new[] { "chicken" },
+            tokens[1].GetProperty("suggestions").EnumerateArray().Select(item => item.GetString()));
+        Assert.Equal(
+            new[] { "bawang" },
+            tokens[2].GetProperty("suggestions").EnumerateArray().Select(item => item.GetString()));
+    }
+
+    [Fact]
     public async Task PostSearch_ExcludingPork_RemovesPorkDishes()
     {
         using var client = CreateClient();
